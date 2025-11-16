@@ -1,17 +1,17 @@
 import java.util.ArrayList;
 
 public abstract class Sommet {
-    String name;
-    ArrayList<Arc> arcs=new ArrayList<>();
-    Sommet(String name){
-        this.name=name;
+    String id;
+    ArrayList<Arc> arcsSortants =new ArrayList<>();
+    Sommet(String id){
+        this.id = id;
     }
     ArrayList<Arc> addArcs(Arc arc){
-        arcs.add(arc);
-        return arcs;
+        arcsSortants.add(arc);
+        return arcsSortants;
     }
-    void setArcs(ArrayList<Arc> arcs){this.arcs=arcs;}
-    ArrayList<Arc> getArcs(){return arcs;}
-    String getName(){return name;}
-    void setName(String name){this.name=name;}
+    void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
+    ArrayList<Arc> getArcsSortants(){return arcsSortants;}
+    String getId(){return id;}
+    void setId(String id){this.id = id;}
 }
