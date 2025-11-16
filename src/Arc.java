@@ -1,10 +1,10 @@
 public class Arc {
-    String depart;
-    String fin;
-    int poids;
-    Arc(String depart, String fin,int poids ){
-        this.depart=depart;
-        this.fin=fin;
-        this.poids=poids;
+    String origine;
+    String arrive;
+    int distance;
+    Arc(String origine, String arrive, int poids ){
+        this.origine = origine;
+        this.arrive = arrive;
+        this.distance =poids;
     }
 }
