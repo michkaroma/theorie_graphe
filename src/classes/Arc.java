@@ -1,3 +1,5 @@
+package classes;
+
 public class Arc {
     String origine;
     String arrive;
@@ -7,4 +9,8 @@ public class Arc {
         this.arrive = arrive;
         this.distance =poids;
     }
+
+    int getDistance(){return distance;}
+    String getOrigine(){return origine;}
+    String getArrive(){return arrive;}
 }
