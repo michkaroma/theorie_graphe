@@ -23,7 +23,8 @@ public class Graphe {
                 Arc arc = new Arc(parts[0], parts[1], Integer.valueOf(parts[2]));
                 if (!sommets.containsKey(parts[0])) sommets.put(parts[0], new Sommet(parts[0]));
                 if (!sommets.containsKey(parts[1])) sommets.put(parts[1], new Sommet(parts[1]));
-                sommets.get(parts[0]).addArcs(arc);
+                sommets.get(parts[0]).addArcsSortants(arc);
+                sommets.get(parts[1]).addArcsEntrants(arc);
             }
             sc.close();
         } catch (FileNotFoundException e) {
@@ -54,6 +55,10 @@ public class Graphe {
                 }
             }
         }
+    }
+
+    public void cul_de_sac(Sommet sommet){
+
     }
 
     public void afficherItineraire(String depart, String arrive) {

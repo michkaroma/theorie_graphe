@@ -1,21 +1,26 @@
 package classes;
 
-import java.io.*;
 import java.util.*;
 
 public class Sommet implements Comparable<Sommet>{
     //variables
     String id;
-    ArrayList<Arc> arcsSortants =new ArrayList<>();
+    ArrayList<Arc> arcsSortants;
 
     //variables algo djikstra
     boolean verif;
     String predecesseur;
     int longueur;
 
+    //variable cul de sac
+    boolean cul_de_sac;
+    ArrayList<Arc> arcsEntrants;
+
+
     //constructeur
     Sommet(String id){
         this.id = id;
+        arcsSortants = new ArrayList<>();
     }
 
     //fonctions de Comparable
@@ -25,10 +30,8 @@ public class Sommet implements Comparable<Sommet>{
     }
 
     //fonctions arcsSortants
-    ArrayList<Arc> addArcs(Arc arc){
-        arcsSortants.add(arc);
-        return arcsSortants;
-    }
+    ArrayList<Arc> addArcsSortants(Arc arc){arcsSortants.add(arc);return arcsSortants;}
+    ArrayList<Arc> addArcsEntrants(Arc arc){arcsEntrants.add(arc);return arcsEntrants;}
     void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
     ArrayList<Arc> getArcsSortants(){return arcsSortants;}
 
