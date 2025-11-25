@@ -5,98 +5,118 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Graphe {
-    HashMap<String, Sommet> sommets;
+    private HashMap<String, Sommet> sommets;
 
-    //constructeur
     public Graphe() {
-        sommets = new HashMap<>();
+        this.sommets = new HashMap<>();
     }
-
 
     public void recupFichier(String adresse) {
         try {
             File fichier = new File(adresse);
             Scanner sc = new Scanner(fichier);
+
             while (sc.hasNextLine()) {
-                String s = sc.nextLine();
-                String[] parts = s.split(";");
-                Arc arc = new Arc(parts[0], parts[1], Integer.valueOf(parts[2]));
-                if (!sommets.containsKey(parts[0])) sommets.put(parts[0], new Sommet(parts[0]));
-                if (!sommets.containsKey(parts[1])) sommets.put(parts[1], new Sommet(parts[1]));
-                sommets.get(parts[0]).addArcs(arc);
+                String ligne = sc.nextLine().trim();
+
+                if (ligne.isEmpty()) continue;
+
+                // Modification ici : on coupe sur les espaces (ou plusieurs espaces)
+                String[] parts = ligne.split("\\s+");
+
+                if (parts.length >= 3) {
+                    String idOrigine = parts[0];
+                    String idArrivee = parts[1];
+                    int distance = Integer.parseInt(parts[2]);
+
+                    if (!sommets.containsKey(idOrigine)) {
+                        sommets.put(idOrigine, new Sommet(idOrigine));
+                    }
+                    if (!sommets.containsKey(idArrivee)) {
+                        sommets.put(idArrivee, new Sommet(idArrivee));
+                    }
+
+                    Arc nouvelArc = new Arc(idOrigine, idArrivee, distance);
+                    sommets.get(idOrigine).addArcs(nouvelArc);
+                }
             }
             sc.close();
         } catch (FileNotFoundException e) {
-            System.err.println(e);
+            System.err.println(e.getMessage());
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
         }
     }
 
-
     public void dijkstra(String depart) {
-        PriorityQueue<Sommet> liste = new PriorityQueue<>();
-        for (Sommet sommet : sommets.values()) {
-            sommet.verif = false;
-            sommet.longueur = Integer.MAX_VALUE;
-            sommet.predecesseur = null;
-        }
-        sommets.get(depart).longueur = 0;
-        liste.add(sommets.get(depart));
+        if (!sommets.containsKey(depart)) return;
 
-        while (!liste.isEmpty()) {
-            Sommet courant = liste.poll();
-            if(courant.verif) continue;
+        for (Sommet s : sommets.values()) {
+            s.setLongueur(Integer.MAX_VALUE);
+            s.verif = false;
+            s.setPredecesseur(null);
+        }
+
+        Sommet sDepart = sommets.get(depart);
+        sDepart.setLongueur(0);
+
+        PriorityQueue<Sommet> file = new PriorityQueue<>();
+        file.add(sDepart);
+
+        while (!file.isEmpty()) {
+            Sommet courant = file.poll();
+
+            if (courant.verif) continue;
             courant.verif = true;
+
             for (Arc arc : courant.getArcsSortants()) {
-                if(courant.getLongueur()+arc.getDistance()<sommets.get(arc.getArrive()).getLongueur()){
-                    sommets.get(arc.getArrive()).setLongueur(arc.getDistance()+courant.getLongueur());
-                    sommets.get(arc.getArrive()).setPredecesseur(courant.id);
-                    liste.add(sommets.get(arc.getArrive()));
+                Sommet voisin = sommets.get(arc.getArrive());
+
+                if (!voisin.verif) {
+                    int nouveauChemin = courant.getLongueur() + arc.getDistance();
+
+                    if (nouveauChemin < voisin.getLongueur()) {
+                        voisin.setLongueur(nouveauChemin);
+                        voisin.setPredecesseur(courant.getId());
+
+                        file.remove(voisin);
+                        file.add(voisin);
+                    }
                 }
             }
         }
     }
 
     public void afficherItineraire(String depart, String arrive) {
-        // On lance Dijkstra à partir du sommet de départ
         dijkstra(depart);
 
-        Sommet dest = sommets.get(arrive);
-        if (dest == null) {
-            System.out.println("Sommet d'arrivée inconnu : " + arrive);
+        if (!sommets.containsKey(arrive)) {
+            System.out.println("Sommet d'arrivée inconnu.");
             return;
         }
 
-        if (dest.longueur == Integer.MAX_VALUE) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
+        Sommet sArrive = sommets.get(arrive);
+
+        if (sArrive.getLongueur() == Integer.MAX_VALUE) {
+            System.out.println("Aucun chemin trouvé.");
             return;
         }
 
-        // Reconstruction du chemin en remontant les prédécesseurs
         List<String> chemin = new ArrayList<>();
-        Sommet courant = dest;
+        String courantId = arrive;
 
-        while (courant != null) {
-            chemin.add(courant.id);
-            if (courant.predecesseur == null) break;
-            courant = sommets.get(courant.predecesseur);
+        while (courantId != null) {
+            chemin.add(courantId);
+            courantId = sommets.get(courantId).getPredecesseur();
         }
 
-        // Si on n'est jamais passé par le depart, problème
-        if (!chemin.get(chemin.size() - 1).equals(depart)) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
-            return;
-        }
-
-        // Le chemin est à l'envers, on le remet dans le bon sens
         Collections.reverse(chemin);
 
-        // Affichage
-        System.out.print("Itinéraire de " + depart + " à " + arrive + " : ");
-        for (int i = 0; i < chemin.size(); i++) {
-            System.out.print(chemin.get(i));
-            if (i < chemin.size() - 1) System.out.print(" -> ");
-        }
-        System.out.println();
-        System.out.println("Longueur totale = " + dest.longueur);
+        System.out.println("Itinéraire : " + String.join(" -> ", chemin));
+        System.out.println("Distance : " + sArrive.getLongueur());
+    }
+
+    public HashMap<String, Sommet> getSommets() {
+        return sommets;
     }
 }
