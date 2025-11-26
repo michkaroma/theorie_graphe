@@ -3,44 +3,46 @@ package classes;
 import java.io.*;
 import java.util.*;
 
-public class Sommet implements Comparable<Sommet>{
-    //variables
-    String id;
-    ArrayList<Arc> arcsSortants =new ArrayList<>();
+public class Sommet {
 
-    //variables algo djikstra
-    boolean verif;
-    String predecesseur;
-    int longueur;
+    // Attributs
+    private String id;
+    private int dechets;
+    private ArrayList<Arc> arcsSortants = new ArrayList<>();
 
-    //constructeur
+    // Constructeur
     Sommet(String id){
         this.id = id;
+        this.dechets = -1;
     }
 
-    //fonctions de Comparable
-    @Override
-    public int compareTo(Sommet o){
-        return Integer.compare(this.longueur,o.longueur);
-    }
-
-    //fonctions arcsSortants
-    ArrayList<Arc> addArcs(Arc arc){
+    // Méthodes
+    // Ajoute un arc sortants à un sommet
+    public void addArcs(Arc arc){
         arcsSortants.add(arc);
-        return arcsSortants;
     }
-    void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
-    ArrayList<Arc> getArcsSortants(){return arcsSortants;}
 
-    //fonction id
-    String getId(){return id;}
-    void setId(String id){this.id = id;}
+    // Accesseurs
+    public void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
+    public ArrayList<Arc> getArcsSortants(){return arcsSortants;}
+    public String getId(){return id;}
+    public void setId(String id){this.id = id;}
+    public int getDechets(){return dechets;}
 
-    //fonction longueur
-    int getLongueur(){return longueur;}
-    void setLongueur(int longueur){this.longueur = longueur;}
 
-    //fonction predecesseur
-    String getPredecesseur(){return predecesseur;}
-    void setPredecesseur(String p){predecesseur = p;}
+    // Surchage de méthodes
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Sommet)) return false;
+        Sommet s = (Sommet)o;
+        return id.equals(s.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+
 }

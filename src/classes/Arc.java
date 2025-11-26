@@ -1,16 +1,24 @@
 package classes;
 
 public class Arc {
-    String origine;
-    String arrive;
-    int distance;
-    Arc(String origine, String arrive, int poids ){
+
+    // Attributs
+    private String nomRue;
+    private Sommet origine;
+    private Sommet arrive;
+    private int longueur;   // Poids de l'arc (la distance de la rue)
+
+
+    // Constructeur
+    public Arc(Sommet origine, Sommet arrive, int distance ){
         this.origine = origine;
         this.arrive = arrive;
-        this.distance =poids;
+        this.longueur = distance;
     }
 
-    int getDistance(){return distance;}
-    String getOrigine(){return origine;}
-    String getArrive(){return arrive;}
+    // Accesseurs
+    public int getLongueur(){return longueur;}
+    public Sommet getOrigine(){return origine;}
+    public Sommet getArrive(){return arrive;}
+    public String getNomRue(){return nomRue;}
 }
