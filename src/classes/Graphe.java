@@ -21,8 +21,8 @@ public class Graphe {
                 String s = sc.nextLine();
                 String[] parts = s.split(";");
                 Arc arc = new Arc(parts[0], parts[1], Integer.valueOf(parts[2]));
-                if (!sommets.containsKey(parts[0])) sommets.put(parts[0], new Sommet(parts[0]));
-                if (!sommets.containsKey(parts[1])) sommets.put(parts[1], new Sommet(parts[1]));
+                if (!sommets.containsKey(parts[0].trim())) sommets.put(parts[0], new Sommet(parts[0]));
+                if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1], new Sommet(parts[1]));
                 sommets.get(parts[0]).addArcs(arc);
             }
             sc.close();
