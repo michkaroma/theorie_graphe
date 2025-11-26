@@ -87,7 +87,7 @@ public class Graphe {
         }
     }
 
-    public void afficherItineraire(String depart, String arrive) {
+    public void afficherItineraireDijkstra(String depart, String arrive) {
         dijkstra(depart);
 
         if (!sommets.containsKey(arrive)) {
