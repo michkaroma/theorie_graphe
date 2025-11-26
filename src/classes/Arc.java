@@ -6,7 +6,7 @@ public class Arc {
     int distance;
     Arc(String origine, String arrive, int poids ){
         this.origine = origine;
-        this.arrive = arriv
+        this.arrive = arrive;
         this.distance =poids;
     }
 

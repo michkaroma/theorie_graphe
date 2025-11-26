@@ -21,7 +21,7 @@ public class Sommet implements Comparable<Sommet>{
     //fonctions de Comparable
     @Override
     public int compareTo(Sommet o){
-        return Integer.compare(this.longueur,o.longu
+        return Integer.compare(this.longueur,o.longueur);
     }
 
     //fonctions arcsSortants
