@@ -1,7 +1,7 @@
 package classes;
 
 public class Logement extends Sommet{
-    Logement(String id){
+    public Logement(String id){
         super(id);
     }
 }
