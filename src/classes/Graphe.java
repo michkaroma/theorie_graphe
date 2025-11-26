@@ -15,36 +15,18 @@ public class Graphe {
         try {
             File fichier = new File(adresse);
             Scanner sc = new Scanner(fichier);
-
             while (sc.hasNextLine()) {
-                String ligne = sc.nextLine().trim();
-
-                if (ligne.isEmpty()) continue;
-
-                // Modification ici : on coupe sur les espaces (ou plusieurs espaces)
-                String[] parts = ligne.split("\\s+");
-
-                if (parts.length >= 3) {
-                    String idOrigine = parts[0];
-                    String idArrivee = parts[1];
-                    int distance = Integer.parseInt(parts[2]);
-
-                    if (!sommets.containsKey(idOrigine)) {
-                        sommets.put(idOrigine, new Sommet(idOrigine));
-                    }
-                    if (!sommets.containsKey(idArrivee)) {
-                        sommets.put(idArrivee, new Sommet(idArrivee));
-                    }
-
-                    Arc nouvelArc = new Arc(idOrigine, idArrivee, distance);
-                    sommets.get(idOrigine).addArcs(nouvelArc);
-                }
+                String s = sc.nextLine();
+                String[] parts = s.split(";");
+                Arc arc = new Arc(parts[0], parts[1], Integer.valueOf(parts[2]));
+                if (!sommets.containsKey(parts[0])) sommets.put(parts[0], new Sommet(parts[0]));
+                if (!sommets.containsKey(parts[1])) sommets.put(parts[1], new Sommet(parts[1]));
+                sommets.get(parts[0]).addArcs(arc);
+                sommets.get(parts[1]).addArcs(arc);
             }
             sc.close();
         } catch (FileNotFoundException e) {
-            System.err.println(e.getMessage());
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.err.println(e);
         }
     }
 
