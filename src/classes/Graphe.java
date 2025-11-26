@@ -18,7 +18,7 @@ public class Graphe {
             File fichier = new File(adresse);
             Scanner sc = new Scanner(fichier);
             while (sc.hasNextLine()) {
-                String s = sc.nextLine();
+                String s = sc.nextLi
                 String[] parts = s.split(";");
                 Arc arc = new Arc(parts[0], parts[1], Integer.valueOf(parts[2]));
                 if (!sommets.containsKey(parts[0])) sommets.put(parts[0], new Sommet(parts[0]));
