@@ -72,7 +72,6 @@ public class Graphe {
 
                 Arc meilleurArc = null;
                 int meilleur = Integer.MAX_VALUE;
-
                 // On parcourt les arcs sortants de la station courant
                 for (Arc arc : courant.getArcsSortants()) {
                     Sommet voisin = sommets.get(arc.getArrive()); // On récupère le sommet voisin à celui courant
@@ -87,7 +86,9 @@ public class Graphe {
                     break;
                 }
 
-                courant = sommets.get(meilleurArc.getArrive());                        // et le nouveau sommet courant devient celui qui à le plus petit arc
+                //if (courant != null) {
+                    courant = sommets.get(meilleurArc.getArrive());                        // et le nouveau sommet courant devient celui qui à le plus petit arc
+                //}
 
                 chemin.add(courant);                                                   // On ajoute le sommet dans le chemin
                 nonVisites.remove(courant);                                            // et on le supprime des sommets non visités

@@ -22,6 +22,7 @@ public class Sommet implements Comparable<Sommet>{
     public Sommet(String id){
         this.id = id;
         arcsSortants = new ArrayList<>();
+        arcsEntrants = new ArrayList<>();
     }
 
     //fonctions de Comparable
