@@ -13,9 +13,15 @@ public class Sommet implements Comparable<Sommet>{
     String predecesseur;
     int longueur;
 
+    //variable cul de sac
+    boolean cul_de_sac;
+    ArrayList<Arc> arcsEntrants;
+
+
     //constructeur
     public Sommet(String id){
         this.id = id;
+        arcsSortants = new ArrayList<>();
     }
 
     //fonctions de Comparable
@@ -24,13 +30,11 @@ public class Sommet implements Comparable<Sommet>{
         return Integer.compare(this.longueur,o.longueur);
     }
 
-    //fonctions arcsSortants
-    public ArrayList<Arc> addArcs(Arc arc){
-        arcsSortants.add(arc);
-        return arcsSortants;
-    }
+    //fonctions arcs
+    public ArrayList<Arc> addArcSortants(Arc arc){arcsSortants.add(arc);return arcsSortants;}
     public void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
     public ArrayList<Arc> getArcsSortants(){return arcsSortants;}
+    public ArrayList<Arc> addArcEntrants(Arc arc){arcsEntrants.add(arc);return arcsSortants;}
 
     //fonction id
     public String getId(){return id;}
