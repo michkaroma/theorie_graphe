@@ -5,13 +5,12 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Graphe {
-    HashMap<String, Sommet> sommets;
+    private HashMap<String, Sommet> sommets;
 
     //constructeur
     public Graphe() {
         sommets = new HashMap<>();
     }
-
 
     public void recupFichier(String adresse) {
         try {
@@ -32,7 +31,6 @@ public class Graphe {
         }
     }
 
-
     public void dijkstra(String depart) {
         PriorityQueue<Sommet> liste = new PriorityQueue<>();
         for (Sommet sommet : sommets.values()) {
@@ -47,6 +45,7 @@ public class Graphe {
             Sommet courant = liste.poll();
             if(courant.verif) continue;
             courant.verif = true;
+
             for (Arc arc : courant.getArcsSortants()) {
                 if(courant.getLongueur()+arc.getDistance()<sommets.get(arc.getArrive()).getLongueur()){
                     sommets.get(arc.getArrive()).setLongueur(arc.getDistance()+courant.getLongueur());
@@ -61,7 +60,7 @@ public class Graphe {
 
     }
 
-    public void afficherItineraire(String depart, String arrive) {
+    public void afficherItineraireDijkstra(String depart, String arrive) {
         // On lance Dijkstra à partir du sommet de départ
         dijkstra(depart);
 
