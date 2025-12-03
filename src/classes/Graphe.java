@@ -19,11 +19,11 @@ public class Graphe {
             while (sc.hasNextLine()) {
                 String s = sc.nextLine();
                 String[] parts = s.split(";");
-                Arc arc = new Arc(parts[0], parts[1], Integer.valueOf(parts[2]));
-                if (!sommets.containsKey(parts[0])) sommets.put(parts[0], new Sommet(parts[0]));
-                if (!sommets.containsKey(parts[1])) sommets.put(parts[1], new Sommet(parts[1]));
-                sommets.get(parts[0]).addArcsSortants(arc);
-                sommets.get(parts[1]).addArcsEntrants(arc);
+                Arc arc = new Arc(parts[0].trim(), parts[1].trim(), Integer.valueOf(parts[2].trim()));
+                if (!sommets.containsKey(parts[0].trim())) sommets.put(parts[0].trim(), new Sommet(parts[0].trim()));
+                if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1].trim(), new Sommet(parts[1].trim()));
+                sommets.get(parts[0].trim()).addArcsSortants(arc);
+                sommets.get(parts[1].trim()).addArcsEntrants(arc);
             }
             sc.close();
         } catch (FileNotFoundException e) {
