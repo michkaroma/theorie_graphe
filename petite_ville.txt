@@ -1,9 +1,8 @@
 A;B;4
+A;C;1
 A;D;5
 A;F;6
-B;A;6
 B;C;2
-C;A;1
 C;D;2
 C;E;8
 D;E;2

@@ -14,7 +14,7 @@ public class Sommet implements Comparable<Sommet>{
     int longueur;
 
     //constructeur
-    Sommet(String id){
+    public Sommet(String id){
         this.id = id;
     }
 
@@ -25,22 +25,22 @@ public class Sommet implements Comparable<Sommet>{
     }
 
     //fonctions arcsSortants
-    ArrayList<Arc> addArcs(Arc arc){
+    public ArrayList<Arc> addArcs(Arc arc){
         arcsSortants.add(arc);
         return arcsSortants;
     }
-    void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
-    ArrayList<Arc> getArcsSortants(){return arcsSortants;}
+    public void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
+    public ArrayList<Arc> getArcsSortants(){return arcsSortants;}
 
     //fonction id
-    String getId(){return id;}
-    void setId(String id){this.id = id;}
+    public String getId(){return id;}
+    public void setId(String id){this.id = id;}
 
     //fonction longueur
-    int getLongueur(){return longueur;}
-    void setLongueur(int longueur){this.longueur = longueur;}
+    public int getLongueur(){return longueur;}
+    public void setLongueur(int longueur){this.longueur = longueur;}
 
     //fonction predecesseur
-    String getPredecesseur(){return predecesseur;}
-    void setPredecesseur(String p){predecesseur = p;}
+    public String getPredecesseur(){return predecesseur;}
+    public void setPredecesseur(String p){predecesseur = p;}
 }
