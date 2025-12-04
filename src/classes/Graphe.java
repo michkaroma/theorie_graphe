@@ -14,7 +14,7 @@ public class Graphe {
         recupFichier("graphe.txt");
         maisons = new HashMap<>();
         for(Sommet sommet:sommets.values()) {
-            if(sommet.getType()==2){//2 pour maison
+            if(sommet.getType()==2||sommet.getType()==0){//2 pour maison et 0 pour centre de traitement
                 maisons.put(sommet.getId(), sommet);
             }
         }
@@ -156,11 +156,11 @@ public class Graphe {
 
         HashMap<Sommet,HashMap<Sommet,Integer>> dist=new HashMap<>();
 
-        for(Sommet s: sommets.values()){
+        for(Sommet s: maisons.values()){
             dijkstra(s.getId());
 
             HashMap<Sommet,Integer> distDepuisS=new HashMap<>();
-            for(Sommet t: sommets.values()) {
+            for(Sommet t: maisons.values()) {
                 distDepuisS.put(t, t.getLongueur());
             }
 
@@ -221,15 +221,15 @@ public class Graphe {
     }
 
     public ResultatCircuit tspBranchAndBound(String departId){
-        Sommet depart=sommets.get(departId);
+        Sommet depart=maisons.get(departId);
         if(depart==null) throw new IllegalArgumentException("Sommet de départ inconnu :"+departId);
 
         HashMap<Sommet,HashMap<Sommet,Integer>>dist=calculerToutesDistances();
 
         HashMap<Sommet,Integer> minSortant=new HashMap<>();
-        for(Sommet s: sommets.values()){
+        for(Sommet s: maisons.values()){
             int min=Integer.MAX_VALUE;
-            for(Sommet t: sommets.values()){
+            for(Sommet t: maisons.values()){
                 int d=dist.get(s).get(t);
                 if(d<min)min=d;
             }
@@ -239,7 +239,7 @@ public class Graphe {
         meilleurCout=Integer.MAX_VALUE;
         meilleurChemin=null;
 
-        HashSet<Sommet> nonVisites=new HashSet<>(sommets.values());
+        HashSet<Sommet> nonVisites=new HashSet<>(maisons.values());
         nonVisites.remove(depart);
 
         ArrayList<Sommet> cheminCourant=new ArrayList<>();
