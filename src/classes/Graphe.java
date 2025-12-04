@@ -7,10 +7,17 @@
 
 public class Graphe {
     private HashMap<String, Sommet> sommets;
-
+    private HashMap<String, Sommet> maisons;
     //constructeur
     public Graphe() {
         sommets = new HashMap<>();
+        recupFichier("graphe.txt");
+        maisons = new HashMap<>();
+        for(Sommet sommet:sommets.values()) {
+            if(sommet.getType()==2){//2 pour maison
+                maisons.put(sommet.getId(), sommet);
+            }
+        }
     }
 
     public void recupFichier(String adresse) {
@@ -21,10 +28,31 @@ public class Graphe {
                 String s = sc.nextLine();
                 String[] parts = s.split(";");
                 Arc arc = new Arc(parts[0].trim(), parts[1].trim(), Integer.valueOf(parts[2].trim()));
-                if (!sommets.containsKey(parts[0].trim())) sommets.put(parts[0].trim(), new Sommet(parts[0].trim()));
-                if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1].trim(), new Sommet(parts[1].trim()));
+
+                if (!sommets.containsKey(parts[0].trim())) {
+                    int type=0;
+                    switch(parts[0].trim().charAt(0)){
+                        case 'c':
+                            type=0;
+                            break;
+                        case 'C':
+                            type=1;
+                            break;
+                        case 'M':
+                            type=2;
+                            break;
+                        case 'P':
+                            type=3;
+                            break;
+                        default:
+                            System.out.println("ce sommet ne rentre pas dans les crieres de type (switch case):" + parts[0]);
+                            break;
+                    }
+                    sommets.put(parts[0].trim(), new Sommet(parts[0].trim(), type));
+                }
+                //if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1].trim(), new Sommet(parts[1].trim()),);
                 sommets.get(parts[0].trim()).addArcSortants(arc);
-                sommets.get(parts[1].trim()).addArcEntrants(arc);
+                //sommets.get(parts[1].trim()).addArcEntrants(arc);
             }
             sc.close();
         } catch (FileNotFoundException e) {
@@ -32,7 +60,7 @@ public class Graphe {
         }
     }
 
-    ///////////////////// THEME 1////////////////////////
+    //////////////////////////// THEME 1////////////////////////
     /// Hypothèse 3
     public void dijkstra(String depart) {
         PriorityQueue<Sommet> liste = new PriorityQueue<>();
@@ -59,6 +87,70 @@ public class Graphe {
         }
     }
 
+    /// Problématique 1 Hypothèse 1
+    public void afficherItineraireDijkstra(String depart, String arrive) {
+        dijkstra(depart);
+
+        Sommet dest = sommets.get(arrive);
+
+        if (dest == null) {
+            System.out.println("Sommet d'arrivée inconnu : " + arrive);
+            return;
+        }
+
+
+        // Reconstruction du chemin en remontant les prédécesseurs
+
+
+        List<String> cheminAlle=new ArrayList<>();
+        Sommet courant = dest;
+
+        while (courant != null) {
+            cheminAlle.add(courant.id);
+            if (courant.predecesseur == null) break;
+            courant = sommets.get(courant.predecesseur);
+        }
+
+        // Le chemin est à l'envers, on le remet dans le bon sens
+        Collections.reverse(cheminAlle);
+
+        dijkstra(arrive);
+
+        Sommet dep = sommets.get(depart);
+
+        if (dep == null) {
+            System.out.println("Sommet de depart inconnu : " + depart);
+            return;
+        }
+
+        List<String> cheminRetour=new ArrayList<>();
+        courant = dep;
+
+        while (courant != null) {
+            cheminRetour.add(courant.id);
+            if (courant.predecesseur == null) break;
+            courant = sommets.get(courant.predecesseur);
+        }
+
+        // Le chemin est à l'envers, on le remet dans le bon sens
+        Collections.reverse(cheminRetour);
+
+
+        //supperposition des deux chemins
+        List<String> chemin = new ArrayList<>(cheminAlle);
+        for(int i=1;i<cheminRetour.size();i++)chemin.add(cheminRetour.get(i));
+
+        // Affichage
+        System.out.print("Itinéraire de " + depart + " à " + arrive + " : ");
+        for (int i = 0; i < chemin.size(); i++) {
+            System.out.print(chemin.get(i));
+            if (i < chemin.size() - 1) System.out.print(" -> ");
+        }
+        System.out.println();
+        System.out.println("Longueur totale = " + dest.longueur);
+    }
+
+    /// Problématique 2
     //calcul des distances pour aller de n'importe quelle point s à n'importe quelle autre point t (grâce à djikstra)
     public HashMap<Sommet,HashMap<Sommet,Integer>> calculerToutesDistances(){
 
@@ -158,49 +250,6 @@ public class Graphe {
         if(meilleurChemin==null)return null;
         return new ResultatCircuit(meilleurChemin,meilleurCout);
 
-    }
-
-    public void afficherItineraireDijkstra(String depart, String arrive) {
-        dijkstra(depart);
-
-        Sommet dest = sommets.get(arrive);
-        if (dest == null) {
-            System.out.println("Sommet d'arrivée inconnu : " + arrive);
-            return;
-        }
-
-        if (dest.longueur == Integer.MAX_VALUE) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
-            return;
-        }
-
-        // Reconstruction du chemin en remontant les prédécesseurs
-        List<String> chemin = new ArrayList<>();
-        Sommet courant = dest;
-
-        while (courant != null) {
-            chemin.add(courant.id);
-            if (courant.predecesseur == null) break;
-            courant = sommets.get(courant.predecesseur);
-        }
-
-        // Si on n'est jamais passé par le depart, problème
-        if (!chemin.get(chemin.size() - 1).equals(depart)) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
-            return;
-        }
-
-        // Le chemin est à l'envers, on le remet dans le bon sens
-        Collections.reverse(chemin);
-
-        // Affichage
-        System.out.print("Itinéraire de " + depart + " à " + arrive + " : ");
-        for (int i = 0; i < chemin.size(); i++) {
-            System.out.print(chemin.get(i));
-            if (i < chemin.size() - 1) System.out.print(" -> ");
-        }
-        System.out.println();
-        System.out.println("Longueur totale = " + dest.longueur);
     }
 
     private ArrayList<Sommet> cheminDijkstraSommet(String departId, String arriveId) {
