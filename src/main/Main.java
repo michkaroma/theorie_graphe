@@ -9,8 +9,10 @@ public class Main {
         Graphe graphe = new Graphe();
         //theme 1 pb1 Hypothèse 1
         graphe.afficherItineraireDijkstra("centre_de_traitement","Maison_7");
+        //theme 1 pb1 Hypothèse 2
+        graphe.afficherItineraireTh1Pb1Hp2("centre_de_traitement");
         //theme 1 pb2
-        graphe.afficherItineraireTsp("centre_de_traitement");
+        graphe.afficherItineraireTh1Pb2("centre_de_traitement");
 
 
         graphe.tourneePPV("centre_de_traitement");

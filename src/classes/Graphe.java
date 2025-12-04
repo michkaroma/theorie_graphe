@@ -12,12 +12,7 @@ public class Graphe {
     public Graphe() {
         sommets = new HashMap<>();
         recupFichier("graphe.txt");
-        maisons = new HashMap<>();
-        for(Sommet sommet:sommets.values()) {
-            if(sommet.getType()==2||sommet.getType()==0){//2 pour maison et 0 pour centre de traitement
-                maisons.put(sommet.getId(), sommet);
-            }
-        }
+
     }
 
     public void recupFichier(String adresse) {
@@ -308,6 +303,40 @@ public class Graphe {
         // Affichage de la longueur totale
         System.out.println("Longueur totale de la tournée = " + res.longueur);
     }
+
+    public void afficherItineraireTh1Pb1Hp2(String depart){
+        maisons = new HashMap<>();
+        maisons.put("centre_de_traitement",sommets.get("centre_de_traitement"));
+        Scanner sc=new Scanner(System.in);
+        int nbMaisons;
+        do {
+            System.out.print("entrez le nombre (positif et inférieur à 10) de particulier :");
+            nbMaisons=sc.nextInt();
+            if(nbMaisons>10 ||nbMaisons<0) System.out.println("il faut que le nombre soit >0 et <10");
+        }while(nbMaisons>10 || nbMaisons<0);
+        for(int i=0;i<nbMaisons;i++) {
+            System.out.print("entrez l'id d'un lieu :");
+            String buffer = new String();
+            buffer = sc.nextLine();
+            if (!sommets.containsKey(buffer)) {
+                System.out.println("adresse inconnu, recommencez");
+                i--;
+            } else maisons.put(buffer, sommets.get(buffer));
+        }
+        sc.close();
+        afficherItineraireTsp(depart);
+    }
+
+    public void afficherItineraireTh1Pb2(String depart){
+        maisons = new HashMap<>();
+        for(Sommet sommet:sommets.values()) {
+            if(sommet.getType()==2||sommet.getType()==0){//2 pour maison et 0 pour centre de traitement
+                maisons.put(sommet.getId(), sommet);
+            }
+        }
+        afficherItineraireTsp(depart);
+    }
+
 
     /////////////////////////THEME2//////////////////////////////
 
