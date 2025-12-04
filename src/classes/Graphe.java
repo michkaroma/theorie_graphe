@@ -2,193 +2,11 @@
 
     import java.io.File;
     import java.io.FileNotFoundException;
+    import java.lang.reflect.Array;
     import java.util.*;
 
 public class Graphe {
     private HashMap<String, Sommet> sommets;
-
-    public static class ResultatCircuit {
-        public final List<Sommet> chemin;
-        public final int longueur;
-
-        public ResultatCircuit(List<Sommet> chemin, int longueur) {
-            this.chemin = chemin;
-            this.longueur = longueur;
-        }
-    }
-
-    private Integer getDistance(Sommet u, Sommet v) {
-        for (Arc arc : u.getArcsSortants()) {
-            Sommet voisin = sommets.get(arc.getArrive());
-            if (voisin == v) { // comparaison par identité d'objet
-                return arc.getDistance();
-            }
-        }
-        return null; // aucun arc direct u -> v
-    }
-
-    private int coutDetour(Sommet a, Sommet b) {
-        Integer ab = getDistance(a, b);
-        Integer ba = getDistance(b, a);
-        if (ab == null || ba == null) {
-            return Integer.MAX_VALUE / 4;
-        }
-        return ab + ba;
-    }
-
-
-    private void tspRec(Sommet courant,
-                        Sommet depart,
-                        Set<Sommet> nonVisites,
-                        int coutActuel,
-                        List<Sommet> cheminCourant,
-                        Map<Sommet, Integer> minSortant) {
-
-        // 1) Borne inférieure
-        int borne = coutActuel;
-        for (Sommet s : nonVisites) {
-            borne += minSortant.get(s);
-        }
-        if (borne >= meilleurCout) {
-            return;
-        }
-
-        // 2) Tous les sommets actifs visités -> on essaie de fermer le tour
-        if (nonVisites.isEmpty()) {
-            Integer coutRetour = getDistance(courant, depart);
-            if (coutRetour == null) {
-                return;
-            }
-            int coutTotal = coutActuel + coutRetour;
-            if (coutTotal < meilleurCout) {
-                meilleurCout = coutTotal;
-                meilleurChemin = new ArrayList<>(cheminCourant);
-                meilleurChemin.add(depart);
-            }
-            return;
-        }
-
-        // 3) Essayer chaque voisin non visité, non cul-de-sac
-        for (Arc arc : courant.getArcsSortants()) {
-            Sommet voisin = sommets.get(arc.getArrive());
-            if (voisin == null) continue;
-            if (voisin.cul_de_sac) continue; // on ne visite pas les culs-de-sac ici
-
-            if (nonVisites.contains(voisin)) {
-                int nouveauCout = coutActuel + arc.getDistance();
-                if (nouveauCout >= meilleurCout) {
-                    continue;
-                }
-
-                nonVisites.remove(voisin);
-                cheminCourant.add(voisin);
-
-                tspRec(voisin, depart, nonVisites, nouveauCout, cheminCourant, minSortant);
-
-                cheminCourant.remove(cheminCourant.size() - 1);
-                nonVisites.add(voisin);
-            }
-        }
-    }
-
-
-    // Variables thèmes 1
-    private int meilleurCout;
-    private List<Sommet> meilleurChemin;
-
-    public ResultatCircuit tspBranchAndBound(String departNom) {
-
-        // 2) Construire la map parent -> liste de culs-de-sac
-        Map<Sommet, List<Sommet>> detours = new HashMap<>();
-        int coutDetours = 0;
-
-        for (Sommet b : sommets.values()) {
-            if (b.cul_de_sac) {
-                // Son unique voisin "parent" : A dans A <-> B
-                List<Arc> sortants = b.getArcsSortants();
-                if (sortants == null || sortants.isEmpty()) continue;
-                Arc arcSortant = sortants.get(0);
-                Sommet parent = sommets.get(arcSortant.getArrive());
-                if (parent == null) continue;
-
-                detours.computeIfAbsent(parent, k -> new ArrayList<>()).add(b);
-                coutDetours += coutDetour(parent, b);
-            }
-        }
-
-        // 3) Construire l'ensemble des sommets non cul-de-sac
-        Set<Sommet> sommetsNonCul = new HashSet<>();
-        for (Sommet s : sommets.values()) {
-            if (!s.cul_de_sac) {
-                sommetsNonCul.add(s);
-            }
-        }
-
-        Sommet depart = sommets.get(departNom);
-        if (depart == null) {
-            throw new IllegalArgumentException("Sommet de départ inconnu : " + departNom);
-        }
-        if (depart.cul_de_sac) {
-            throw new IllegalArgumentException("Le sommet de départ ne peut pas être un cul-de-sac.");
-        }
-
-        // 4) Pré-calcul minSortant sur les sommets non cul-de-sac
-        Map<Sommet, Integer> minSortant = new HashMap<>();
-        for (Sommet s : sommetsNonCul) {
-            int min = Integer.MAX_VALUE;
-            for (Arc arc : s.getArcsSortants()) {
-                Sommet voisin = sommets.get(arc.getArrive());
-                if (voisin != null && !voisin.cul_de_sac) { // on ignore les culs-de-sac ici
-                    if (arc.getDistance() < min) {
-                        min = arc.getDistance();
-                    }
-                }
-            }
-            if (min == Integer.MAX_VALUE) {
-                // s n'a pas de sortie vers un autre sommet actif -> impossible de faire un tour
-                return null;
-            }
-            minSortant.put(s, min);
-        }
-
-        // 5) Initialisation Branch & Bound sur les sommets non cul-de-sac
-        meilleurCout = Integer.MAX_VALUE;
-        meilleurChemin = null;
-
-        Set<Sommet> nonVisites = new HashSet<>(sommetsNonCul);
-        nonVisites.remove(depart);
-
-        List<Sommet> cheminCourant = new ArrayList<>();
-        cheminCourant.add(depart);
-
-        tspRec(depart, depart, nonVisites, 0, cheminCourant, minSortant);
-
-        if (meilleurChemin == null) {
-            return null;
-        }
-
-        // 6) Construire le chemin final avec les détours ajoutés
-        List<Sommet> cheminFinal = new ArrayList<>();
-        Set<Sommet> dejaDetour = new HashSet<>();
-
-        for (Sommet s : meilleurChemin) {
-            cheminFinal.add(s);
-
-            // On n'ajoute les détours qu'une seule fois par sommet parent
-            if (!dejaDetour.contains(s) && detours.containsKey(s)) {
-                for (Sommet b : detours.get(s)) {
-                    cheminFinal.add(b);
-                    cheminFinal.add(s); // retour au parent
-                }
-                dejaDetour.add(s);
-            }
-        }
-
-        int longueurTotale = meilleurCout + coutDetours;
-
-        return new ResultatCircuit(cheminFinal, longueurTotale);
-    }
-
 
     //constructeur
     public Graphe() {
@@ -214,6 +32,8 @@ public class Graphe {
         }
     }
 
+    ///////////////////// THEME 1////////////////////////
+    /// Hypothèse 3
     public void dijkstra(String depart) {
         PriorityQueue<Sommet> liste = new PriorityQueue<>();
         for (Sommet sommet : sommets.values()) {
@@ -239,7 +59,210 @@ public class Graphe {
         }
     }
 
-        // THEME 2 : APPROCHE 1 (Plus petit voisins proches)
+    //calcul des distances pour aller de n'importe quelle point s à n'importe quelle autre point t (grâce à djikstra)
+    public HashMap<Sommet,HashMap<Sommet,Integer>> calculerToutesDistances(){
+
+        HashMap<Sommet,HashMap<Sommet,Integer>> dist=new HashMap<>();
+
+        for(Sommet s: sommets.values()){
+            dijkstra(s.getId());
+
+            HashMap<Sommet,Integer> distDepuisS=new HashMap<>();
+            for(Sommet t: sommets.values()) {
+                distDepuisS.put(t, t.getLongueur());
+            }
+
+            dist.put(s,distDepuisS);
+
+        }
+
+        return dist;
+    }
+
+    //sous classe pour plus de practicité dans le stockage des résultats
+    public class ResultatCircuit {
+        ArrayList<Sommet> chemin;
+        int longueur;
+        ResultatCircuit(ArrayList<Sommet> meilleurChemin,int meilleurCout){
+            chemin=meilleurChemin;
+            longueur=meilleurCout;
+        }
+    }
+    private int meilleurCout;
+    private ArrayList<Sommet> meilleurChemin;
+
+    private void tspRec(Sommet courant,Sommet depart,HashSet<Sommet> nonVisites,
+                        int coutActuel,ArrayList<Sommet> cheminCourant,HashMap<Sommet,
+                    HashMap<Sommet,Integer>> dist,HashMap<Sommet,Integer> minSortant){
+        int borne = coutActuel;
+        for(Sommet s: nonVisites){
+            borne+=minSortant.get(s);
+        }
+        if(borne>=meilleurCout){
+            return;
+        }
+
+        if(nonVisites.isEmpty()){
+            int coutRetour=dist.get(courant).get(depart);
+            int coutTotal=coutActuel+coutRetour;
+            if(coutTotal<meilleurCout){
+                meilleurCout=coutTotal;
+                meilleurChemin=new ArrayList<>(cheminCourant);
+                meilleurChemin.add(depart);
+            }
+            return;
+        }
+        ArrayList<Sommet> candidats = new ArrayList<>(nonVisites);
+
+        for(Sommet suivant :candidats){
+            int d=dist.get(courant).get(suivant);
+            int nouveauCout=coutActuel+d;
+            if(nouveauCout >=meilleurCout) continue;
+            nonVisites.remove(suivant);
+            cheminCourant.add(suivant);
+
+            tspRec(suivant,depart,nonVisites,nouveauCout,cheminCourant,dist,minSortant);
+
+            cheminCourant.remove(cheminCourant.size()-1);
+            nonVisites.add(suivant);
+        }
+    }
+
+    public ResultatCircuit tspBranchAndBound(String departId){
+        Sommet depart=sommets.get(departId);
+        if(depart==null) throw new IllegalArgumentException("Sommet de départ inconnu :"+departId);
+
+        HashMap<Sommet,HashMap<Sommet,Integer>>dist=calculerToutesDistances();
+
+        HashMap<Sommet,Integer> minSortant=new HashMap<>();
+        for(Sommet s: sommets.values()){
+            int min=Integer.MAX_VALUE;
+            for(Sommet t: sommets.values()){
+                int d=dist.get(s).get(t);
+                if(d<min)min=d;
+            }
+            minSortant.put(s,min);
+        }
+
+        meilleurCout=Integer.MAX_VALUE;
+        meilleurChemin=null;
+
+        HashSet<Sommet> nonVisites=new HashSet<>(sommets.values());
+        nonVisites.remove(depart);
+
+        ArrayList<Sommet> cheminCourant=new ArrayList<>();
+        cheminCourant.add(depart);
+
+        tspRec(depart,depart,nonVisites,0,cheminCourant,dist,minSortant);
+
+        if(meilleurChemin==null)return null;
+        return new ResultatCircuit(meilleurChemin,meilleurCout);
+
+    }
+
+    public void afficherItineraireDijkstra(String depart, String arrive) {
+        dijkstra(depart);
+
+        Sommet dest = sommets.get(arrive);
+        if (dest == null) {
+            System.out.println("Sommet d'arrivée inconnu : " + arrive);
+            return;
+        }
+
+        if (dest.longueur == Integer.MAX_VALUE) {
+            System.out.println("Aucun chemin de " + depart + " à " + arrive);
+            return;
+        }
+
+        // Reconstruction du chemin en remontant les prédécesseurs
+        List<String> chemin = new ArrayList<>();
+        Sommet courant = dest;
+
+        while (courant != null) {
+            chemin.add(courant.id);
+            if (courant.predecesseur == null) break;
+            courant = sommets.get(courant.predecesseur);
+        }
+
+        // Si on n'est jamais passé par le depart, problème
+        if (!chemin.get(chemin.size() - 1).equals(depart)) {
+            System.out.println("Aucun chemin de " + depart + " à " + arrive);
+            return;
+        }
+
+        // Le chemin est à l'envers, on le remet dans le bon sens
+        Collections.reverse(chemin);
+
+        // Affichage
+        System.out.print("Itinéraire de " + depart + " à " + arrive + " : ");
+        for (int i = 0; i < chemin.size(); i++) {
+            System.out.print(chemin.get(i));
+            if (i < chemin.size() - 1) System.out.print(" -> ");
+        }
+        System.out.println();
+        System.out.println("Longueur totale = " + dest.longueur);
+    }
+
+    private ArrayList<Sommet> cheminDijkstraSommet(String departId, String arriveId) {
+        dijkstra(departId);
+
+        Sommet dest = sommets.get(arriveId);
+        if (dest == null || dest.longueur == Integer.MAX_VALUE) {
+            return null; // pas de chemin
+        }
+
+        // Reconstruction du chemin en remontant les prédécesseurs
+        ArrayList<Sommet> chemin = new ArrayList<>();
+        Sommet courant = dest;
+
+        while (courant != null) {
+            chemin.add(courant);
+            if (courant.predecesseur == null) break;
+            courant = sommets.get(courant.predecesseur);
+        }
+
+        // Le chemin est à l'envers, on le remet dans le bon sens
+        Collections.reverse(chemin);
+        return chemin;
+    }
+
+    public void afficherItineraireTsp(String depart) {
+
+        ResultatCircuit res = tspBranchAndBound(depart);
+
+        if (res == null) {
+            System.out.println("Aucune tournée TSP trouvée à partir de " + depart + ".");
+            return;
+        }
+
+        ArrayList<Sommet> tour=res.chemin;
+
+        List<Sommet> cheminComplet=new ArrayList<>();
+        for(int i=0;i<tour.size()-1;i++){
+            Sommet from=tour.get(i);
+            Sommet to=tour.get(i+1);
+
+            ArrayList<Sommet> segment = cheminDijkstraSommet(from.getId(),to.getId());
+            if(i==0)for(int j=0;j<segment.size();j++)cheminComplet.add(segment.get(j));
+            else for(int j=1;j<segment.size();j++)cheminComplet.add(segment.get(j));
+        }
+
+        // Affichage du chemin
+        System.out.print("Itinéraire TSP à partir de " + depart + " : ");
+
+        for (int i = 0; i < cheminComplet.size(); i++) {
+            System.out.println(cheminComplet.get(i).getId());
+            if (i < cheminComplet.size() - 1) System.out.print(" -> ");
+        }
+        System.out.println();
+
+        // Affichage de la longueur totale
+        System.out.println("Longueur totale de la tournée = " + res.longueur);
+    }
+
+    /////////////////////////THEME2//////////////////////////////
+
+    // THEME 2 : APPROCHE 1 (Plus petit voisins proches)
         public List<Sommet> tourneePPV(String depart) {
 
             Sommet courant = sommets.get(depart);  // On récupère le sommet de depart
@@ -399,80 +422,4 @@ public class Graphe {
 
 
 
-
-    public void cul_de_sac() {
-        for(Sommet sommet:sommets.values()) {
-            List<Arc> sortants = sommet.getArcsSortants();
-            List<Arc> entrants = sommet.arcsEntrants;
-
-            // Par sécurité si non initialisé
-            if (sortants == null || entrants == null) {
-                sommet.cul_de_sac = false;
-                return;
-            }
-
-            // Un cul de sac du type A -> B -> A
-            // Se produit si :
-            // 1) un seul arc entrant
-            // 2) un seul arc sortant
-            // 3) l'origine de l'arc entrant == la destination de l'arc sortant
-            if (sortants.size() == 1 && entrants.size() == 1) {
-                Arc arcSortant = sortants.get(0);
-                Arc arcEntrant = entrants.get(0);
-
-                // Le sommet voisin doit être le même
-                if (arcSortant.getArrive().equals(arcEntrant.getOrigine())) {
-                    sommet.cul_de_sac = true;
-                    return;
-                }
-            }
-
-            sommet.cul_de_sac = false;
-        }
-    }
-
-
-    public void afficherItineraireDijkstra(String depart, String arrive) {
-        // On lance Dijkstra à partir du sommet de départ
-        dijkstra(depart);
-
-        Sommet dest = sommets.get(arrive);
-        if (dest == null) {
-            System.out.println("Sommet d'arrivée inconnu : " + arrive);
-            return;
-        }
-
-        if (dest.longueur == Integer.MAX_VALUE) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
-            return;
-        }
-
-        // Reconstruction du chemin en remontant les prédécesseurs
-        List<String> chemin = new ArrayList<>();
-        Sommet courant = dest;
-
-        while (courant != null) {
-            chemin.add(courant.id);
-            if (courant.predecesseur == null) break;
-            courant = sommets.get(courant.predecesseur);
-        }
-
-        // Si on n'est jamais passé par le depart, problème
-        if (!chemin.get(chemin.size() - 1).equals(depart)) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
-            return;
-        }
-
-        // Le chemin est à l'envers, on le remet dans le bon sens
-        Collections.reverse(chemin);
-
-        // Affichage
-        System.out.print("Itinéraire de " + depart + " à " + arrive + " : ");
-        for (int i = 0; i < chemin.size(); i++) {
-            System.out.print(chemin.get(i));
-            if (i < chemin.size() - 1) System.out.print(" -> ");
-        }
-        System.out.println();
-        System.out.println("Longueur totale = " + dest.longueur);
-    }
 }
