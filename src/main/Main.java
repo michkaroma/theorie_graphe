@@ -9,9 +9,9 @@ public class Main {
         Graphe graphe = new Graphe();
         graphe.recupFichier("graphe.txt");
         graphe.afficherItineraireDijkstra("centre_de_traitement","Maison_5");
-        graphe.tourneePPV("B");
+        graphe.tourneePPV("centre_de_traitement");
 
-        List<Sommet> tour = graphe.tourneeMST("A"); // exemple : sommet de départ = A
+        List<Sommet> tour = graphe.tourneeMST("Maison_5"); // exemple : sommet de départ = A
 
         for (Sommet s : tour) {
             System.out.print(s.getId() + " -> ");
