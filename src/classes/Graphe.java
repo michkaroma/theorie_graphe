@@ -7,6 +7,189 @@
 public class Graphe {
     private HashMap<String, Sommet> sommets;
 
+    public static class ResultatCircuit {
+        public final List<Sommet> chemin;
+        public final int longueur;
+
+        public ResultatCircuit(List<Sommet> chemin, int longueur) {
+            this.chemin = chemin;
+            this.longueur = longueur;
+        }
+    }
+
+    private Integer getDistance(Sommet u, Sommet v) {
+        for (Arc arc : u.getArcsSortants()) {
+            Sommet voisin = sommets.get(arc.getArrive());
+            if (voisin == v) { // comparaison par identité d'objet
+                return arc.getDistance();
+            }
+        }
+        return null; // aucun arc direct u -> v
+    }
+
+    private int coutDetour(Sommet a, Sommet b) {
+        Integer ab = getDistance(a, b);
+        Integer ba = getDistance(b, a);
+        if (ab == null || ba == null) {
+            return Integer.MAX_VALUE / 4;
+        }
+        return ab + ba;
+    }
+
+
+    private void tspRec(Sommet courant,
+                        Sommet depart,
+                        Set<Sommet> nonVisites,
+                        int coutActuel,
+                        List<Sommet> cheminCourant,
+                        Map<Sommet, Integer> minSortant) {
+
+        // 1) Borne inférieure
+        int borne = coutActuel;
+        for (Sommet s : nonVisites) {
+            borne += minSortant.get(s);
+        }
+        if (borne >= meilleurCout) {
+            return;
+        }
+
+        // 2) Tous les sommets actifs visités -> on essaie de fermer le tour
+        if (nonVisites.isEmpty()) {
+            Integer coutRetour = getDistance(courant, depart);
+            if (coutRetour == null) {
+                return;
+            }
+            int coutTotal = coutActuel + coutRetour;
+            if (coutTotal < meilleurCout) {
+                meilleurCout = coutTotal;
+                meilleurChemin = new ArrayList<>(cheminCourant);
+                meilleurChemin.add(depart);
+            }
+            return;
+        }
+
+        // 3) Essayer chaque voisin non visité, non cul-de-sac
+        for (Arc arc : courant.getArcsSortants()) {
+            Sommet voisin = sommets.get(arc.getArrive());
+            if (voisin == null) continue;
+            if (voisin.cul_de_sac) continue; // on ne visite pas les culs-de-sac ici
+
+            if (nonVisites.contains(voisin)) {
+                int nouveauCout = coutActuel + arc.getDistance();
+                if (nouveauCout >= meilleurCout) {
+                    continue;
+                }
+
+                nonVisites.remove(voisin);
+                cheminCourant.add(voisin);
+
+                tspRec(voisin, depart, nonVisites, nouveauCout, cheminCourant, minSortant);
+
+                cheminCourant.remove(cheminCourant.size() - 1);
+                nonVisites.add(voisin);
+            }
+        }
+    }
+
+
+    // Variables thèmes 1
+    private int meilleurCout;
+    private List<Sommet> meilleurChemin;
+
+    public ResultatCircuit tspBranchAndBound(String departNom) {
+
+        // 2) Construire la map parent -> liste de culs-de-sac
+        Map<Sommet, List<Sommet>> detours = new HashMap<>();
+        int coutDetours = 0;
+
+        for (Sommet b : sommets.values()) {
+            if (b.cul_de_sac) {
+                // Son unique voisin "parent" : A dans A <-> B
+                List<Arc> sortants = b.getArcsSortants();
+                if (sortants == null || sortants.isEmpty()) continue;
+                Arc arcSortant = sortants.get(0);
+                Sommet parent = sommets.get(arcSortant.getArrive());
+                if (parent == null) continue;
+
+                detours.computeIfAbsent(parent, k -> new ArrayList<>()).add(b);
+                coutDetours += coutDetour(parent, b);
+            }
+        }
+
+        // 3) Construire l'ensemble des sommets non cul-de-sac
+        Set<Sommet> sommetsNonCul = new HashSet<>();
+        for (Sommet s : sommets.values()) {
+            if (!s.cul_de_sac) {
+                sommetsNonCul.add(s);
+            }
+        }
+
+        Sommet depart = sommets.get(departNom);
+        if (depart == null) {
+            throw new IllegalArgumentException("Sommet de départ inconnu : " + departNom);
+        }
+        if (depart.cul_de_sac) {
+            throw new IllegalArgumentException("Le sommet de départ ne peut pas être un cul-de-sac.");
+        }
+
+        // 4) Pré-calcul minSortant sur les sommets non cul-de-sac
+        Map<Sommet, Integer> minSortant = new HashMap<>();
+        for (Sommet s : sommetsNonCul) {
+            int min = Integer.MAX_VALUE;
+            for (Arc arc : s.getArcsSortants()) {
+                Sommet voisin = sommets.get(arc.getArrive());
+                if (voisin != null && !voisin.cul_de_sac) { // on ignore les culs-de-sac ici
+                    if (arc.getDistance() < min) {
+                        min = arc.getDistance();
+                    }
+                }
+            }
+            if (min == Integer.MAX_VALUE) {
+                // s n'a pas de sortie vers un autre sommet actif -> impossible de faire un tour
+                return null;
+            }
+            minSortant.put(s, min);
+        }
+
+        // 5) Initialisation Branch & Bound sur les sommets non cul-de-sac
+        meilleurCout = Integer.MAX_VALUE;
+        meilleurChemin = null;
+
+        Set<Sommet> nonVisites = new HashSet<>(sommetsNonCul);
+        nonVisites.remove(depart);
+
+        List<Sommet> cheminCourant = new ArrayList<>();
+        cheminCourant.add(depart);
+
+        tspRec(depart, depart, nonVisites, 0, cheminCourant, minSortant);
+
+        if (meilleurChemin == null) {
+            return null;
+        }
+
+        // 6) Construire le chemin final avec les détours ajoutés
+        List<Sommet> cheminFinal = new ArrayList<>();
+        Set<Sommet> dejaDetour = new HashSet<>();
+
+        for (Sommet s : meilleurChemin) {
+            cheminFinal.add(s);
+
+            // On n'ajoute les détours qu'une seule fois par sommet parent
+            if (!dejaDetour.contains(s) && detours.containsKey(s)) {
+                for (Sommet b : detours.get(s)) {
+                    cheminFinal.add(b);
+                    cheminFinal.add(s); // retour au parent
+                }
+                dejaDetour.add(s);
+            }
+        }
+
+        int longueurTotale = meilleurCout + coutDetours;
+
+        return new ResultatCircuit(cheminFinal, longueurTotale);
+    }
+
+
     //constructeur
     public Graphe() {
         sommets = new HashMap<>();
@@ -217,9 +400,37 @@ public class Graphe {
 
 
 
-    public void cul_de_sac(Sommet sommet){
+    public void cul_de_sac() {
+        for(Sommet sommet:sommets.values()) {
+            List<Arc> sortants = sommet.getArcsSortants();
+            List<Arc> entrants = sommet.arcsEntrants;
 
+            // Par sécurité si non initialisé
+            if (sortants == null || entrants == null) {
+                sommet.cul_de_sac = false;
+                return;
+            }
+
+            // Un cul de sac du type A -> B -> A
+            // Se produit si :
+            // 1) un seul arc entrant
+            // 2) un seul arc sortant
+            // 3) l'origine de l'arc entrant == la destination de l'arc sortant
+            if (sortants.size() == 1 && entrants.size() == 1) {
+                Arc arcSortant = sortants.get(0);
+                Arc arcEntrant = entrants.get(0);
+
+                // Le sommet voisin doit être le même
+                if (arcSortant.getArrive().equals(arcEntrant.getOrigine())) {
+                    sommet.cul_de_sac = true;
+                    return;
+                }
+            }
+
+            sommet.cul_de_sac = false;
+        }
     }
+
 
     public void afficherItineraireDijkstra(String depart, String arrive) {
         // On lance Dijkstra à partir du sommet de départ
