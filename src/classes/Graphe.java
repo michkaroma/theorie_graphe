@@ -2,7 +2,6 @@
 
     import java.io.File;
     import java.io.FileNotFoundException;
-    import java.lang.reflect.Array;
     import java.util.*;
 
 public class Graphe {
@@ -83,7 +82,8 @@ public class Graphe {
     }
 
     /// Problématique 1 Hypothèse 1
-    public void afficherItineraireDijkstra(String depart, String arrive) {
+    public void afficherItineraireTh1Pb1Hp1(String depart, String arrive) {
+        int longueurTot=0;
         dijkstra(depart);
 
         Sommet dest = sommets.get(arrive);
@@ -109,6 +109,9 @@ public class Graphe {
         // Le chemin est à l'envers, on le remet dans le bon sens
         Collections.reverse(cheminAlle);
 
+        longueurTot +=dest.longueur;
+
+
         dijkstra(arrive);
 
         Sommet dep = sommets.get(depart);
@@ -130,6 +133,7 @@ public class Graphe {
         // Le chemin est à l'envers, on le remet dans le bon sens
         Collections.reverse(cheminRetour);
 
+        longueurTot +=dep.longueur;
 
         //supperposition des deux chemins
         List<String> chemin = new ArrayList<>(cheminAlle);
@@ -142,10 +146,10 @@ public class Graphe {
             if (i < chemin.size() - 1) System.out.print(" -> ");
         }
         System.out.println();
-        System.out.println("Longueur totale = " + dest.longueur);
+        System.out.println("Longueur totale = " + longueurTot );
     }
 
-    /// Problématique 2
+    /// Problématique 1 Hypothèse 2 & Problématique 2
     //calcul des distances pour aller de n'importe quelle point s à n'importe quelle autre point t (grâce à djikstra)
     public HashMap<Sommet,HashMap<Sommet,Integer>> calculerToutesDistances(){
 
