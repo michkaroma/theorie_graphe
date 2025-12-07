@@ -13,9 +13,9 @@ Carrefour_1;Maison_6;110;1
 Maison_6;Carrefour_3;80;1
 Carrefour_3;Maison_7;65;1
 Maison_7;Carrefour_2;30;1
-Carrefour_3;Maison_9;50;2
-Maison_9;Carrefour_4;20;2
-Carrefour_4;Maison_10;10;2
-Maison_10;Carrefour_2;10;2
-Carrefour_4;Maison_11;25;1
-Maison_11;Carrefour_1;10;1
+Carrefour_3;Maison_11;35;2
+Maison_11;Carrefour_4;20;2
+Carrefour_4;Maison_10;30;2
+Maison_10;Carrefour_1;40;2
+Carrefour_4;Maison_9;25;1
+Maison_9;Carrefour_2;50;1
