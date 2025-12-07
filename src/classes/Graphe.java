@@ -459,7 +459,6 @@ public class Graphe {
                 } while (j0 != 0);
             }
 
-            // p[j] = i => i is assigned to j
             int[] assignment = new int[n];
             for (int j = 1; j <= n; j++) {
                 if (p[j] > 0) {
@@ -493,46 +492,33 @@ public class Graphe {
         }
         HashMap<Sommet,HashMap<Sommet,Integer>> dist=calculerToutesDistances(sommetsN,sommetsP);
 
-        // Exemple de construction de listes avec multiplicité
-        List<Sommet> gauche = new ArrayList<>(); // sommetsN, répétés |diff|
-        List<Sommet> droite = new ArrayList<>(); // sommetsP, répétés |diff|
+        List<Sommet> gauche = new ArrayList<>();
+        List<Sommet> droite = new ArrayList<>();
 
         for (Sommet s : sommetsN.values()) {
-            int k = -s.getDiffDegre(); // par ex. si diff = -2 -> 2 fois
+            int k = -s.getDiffDegre();
             for (int i = 0; i < k; i++) {
                 gauche.add(s);
             }
         }
 
         for (Sommet s : sommetsP.values()) {
-            int k = s.getDiffDegre(); // ex. si diff = +3 -> 3 fois
+            int k = s.getDiffDegre();
             for (int i = 0; i < k; i++) {
                 droite.add(s);
             }
         }
-        final int INF = 1_000_000_000;
         int n = gauche.size();
         int[][] cost = new int[n][n];
         for (int i = 0; i < n; i++) {
             Sommet from = gauche.get(i);
             HashMap<Sommet, Integer> distFrom = dist.get(from);
 
-            if (distFrom == null) {
-                // normalement impossible si le graphe réduit est fortement connexe
-                throw new IllegalStateException("Aucune distance connue depuis " + from.getId());
-            }
-
             for (int j = 0; j < n; j++) {
                 Sommet to = droite.get(j);
                 Integer dObj = distFrom.get(to);
 
-                int d;
-                if (dObj == null || dObj == Integer.MAX_VALUE) {
-                    // pas de chemin trouvé → on met un coût énorme
-                    d = INF;
-                } else {
-                    d = dObj;
-                }
+                int d=dObj;
                 cost[i][j] = d;
             }
         }
@@ -543,7 +529,7 @@ public class Graphe {
 
             dijkstra(from.getId());
 
-            ajouterChemin(from, to); // à implémenter
+            ajouterChemin(from, to);
         }
 
     }
@@ -571,7 +557,6 @@ public class Graphe {
             throw new IllegalArgumentException("Sommet de départ inconnu : " + departId);
         }
 
-        // 1. Copie des arcs sortants dans des Deque consumables
         Map<String, Deque<Arc>> adj = new HashMap<>();
         for (Sommet s : sommets.values()) {
             adj.put(s.getId(), new ArrayDeque<>(s.getArcsSortants()));
@@ -583,19 +568,16 @@ public class Graphe {
 
         pileSommets.push(depart);
 
-        // 2. Hierholzer : on construit une liste d'arcs dans l'ordre inverse
         while (!pileSommets.isEmpty()) {
             Sommet v = pileSommets.peek();
             Deque<Arc> arcsSortants = adj.get(v.getId());
 
             if (arcsSortants != null && !arcsSortants.isEmpty()) {
-                // On prend un arc sortant encore disponible
                 Arc a = arcsSortants.pollFirst();
                 Sommet w = sommets.get(a.getArrive());
                 pileSommets.push(w);
-                pileArcs.push(a); // arc correspondant au déplacement
+                pileArcs.push(a);
             } else {
-                // Cul-de-sac : on remonte en ajoutant l'arc associé au circuit
                 pileSommets.pop();
                 if (!pileArcs.isEmpty()) {
                     circuitArcs.add(pileArcs.pop());
@@ -603,15 +585,12 @@ public class Graphe {
             }
         }
 
-        // 3. On a les arcs du circuit dans l'ordre inverse → renverser
         Collections.reverse(circuitArcs);
 
-        // 4. Construire la liste de sommets + calculer la longueur totale
         ArrayList<Sommet> chemin = new ArrayList<>();
         int longueurTotale = 0;
 
         if (!circuitArcs.isEmpty()) {
-            // Premier sommet : origine du premier arc
             Arc first = circuitArcs.get(0);
             Sommet current = sommets.get(first.getOrigine());
             chemin.add(current);
