@@ -89,7 +89,7 @@ public class Graphe {
         Sommet dest = sommets.get(arrive);
 
         if (dest == null) {
-            System.out.println("Sommet d'arrivée inconnu : " + arrive);
+            System.out.println("Sommet d'arrivee inconnu : " + arrive);
             return;
         }
 
@@ -140,7 +140,7 @@ public class Graphe {
         for(int i=1;i<cheminRetour.size();i++)chemin.add(cheminRetour.get(i));
 
         // Affichage
-        System.out.print("Itinéraire de " + depart + " à " + arrive + " : ");
+        System.out.print("Itineraire de " + depart + " à " + arrive + " : ");
         for (int i = 0; i < chemin.size(); i++) {
             System.out.print(chemin.get(i));
             if (i < chemin.size() - 1) System.out.print(" -> ");
@@ -221,7 +221,7 @@ public class Graphe {
 
     public ResultatCircuit tspBranchAndBound(String departId){
         Sommet depart=maisons.get(departId);
-        if(depart==null) throw new IllegalArgumentException("Sommet de départ inconnu :"+departId);
+        if(depart==null) throw new IllegalArgumentException("Sommet de depart inconnu :"+departId);
 
         HashMap<Sommet,HashMap<Sommet,Integer>>dist=calculerToutesDistances();
 
@@ -279,7 +279,7 @@ public class Graphe {
         ResultatCircuit res = tspBranchAndBound(depart);
 
         if (res == null) {
-            System.out.println("Aucune tournée TSP trouvée à partir de " + depart + ".");
+            System.out.println("Aucune tournee TSP trouvee à partir de " + depart + ".");
             return;
         }
 
@@ -296,7 +296,7 @@ public class Graphe {
         }
 
         // Affichage du chemin
-        System.out.print("Itinéraire TSP à partir de " + depart + " : ");
+        System.out.print("Itineraire TSP à partir de " + depart + " : ");
 
         for (int i = 0; i < cheminComplet.size(); i++) {
             System.out.println(cheminComplet.get(i).getId());
@@ -305,7 +305,7 @@ public class Graphe {
         System.out.println();
 
         // Affichage de la longueur totale
-        System.out.println("Longueur totale de la tournée = " + res.longueur);
+        System.out.println("Longueur totale de la tournee = " + res.longueur);
     }
 
     public void afficherItineraireTh1Pb1Hp2(String depart){
@@ -314,7 +314,7 @@ public class Graphe {
         Scanner sc=new Scanner(System.in);
         int nbMaisons;
         do {
-            System.out.print("entrez le nombre (positif et inférieur à 10) de particulier :");
+            System.out.print("entrez le nombre (positif et inferieur à 10) de particulier :");
             nbMaisons=sc.nextInt();
             if(nbMaisons>10 ||nbMaisons<0) System.out.println("il faut que le nombre soit >0 et <10");
         }while(nbMaisons>10 || nbMaisons<0);
