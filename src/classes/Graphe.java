@@ -10,9 +10,17 @@ public class Graphe {
     private int capaciteCamion = 15;
 
     //constructeur
-    public Graphe() {
+    public Graphe(String fichier) {
         sommets = new HashMap<>();
-        recupFichier("grapheCapacite.txt");
+        recupFichier(fichier);
+    }
+    public Graphe(HashMap<String,Sommet> graphe) {
+        sommets = graphe;
+        for(Sommet s:sommets.values()) {
+            s.setDegreN(s.getArcsEntrants().size());
+            s.setDegreP(s.getArcsSortants().size());
+            s.setDiffDegre(s.getDegreP()-s.getDegreN());
+        }
     }
     private void actualisationDiffDegre(){
         for (Sommet sommet : sommets.values()) {sommet.setDiffDegre(sommet.getDegreP()-sommet.getDegreN());}
@@ -27,7 +35,6 @@ public class Graphe {
                 String s = sc.nextLine();
                 String[] parts = s.split(";");
                 Arc arc = new Arc(parts[0].trim(), parts[1].trim(), Integer.valueOf(parts[2].trim()), Integer.valueOf(parts[3].trim()));
-
                 if (!sommets.containsKey(parts[0].trim())) {
                     int type=0;
                     switch(parts[0].trim().charAt(0)){
@@ -388,13 +395,84 @@ public class Graphe {
         }
         for(Sommet cible: sommets.values()){
             if(!(cible.getType()==1 || cible.getType()==0 ) || cible==depart || cible.getLongueur()==Integer.MAX_VALUE) continue;
-            graphe.get(depart).addArcSortants(new Arc(departId,cible.getId(),cible.getLongueur()));
-            graphe.get(depart).addArcEntrants(new Arc(cible.getId(),departId,cible.getLongueur()));
+            Arc a = new Arc(departId, cible.getId(), cible.getLongueur());
+            graphe.get(departId).addArcSortants(a);
+            graphe.get(cible.getId()).addArcEntrants(a);
         }
     }
 
-    private HashMap<String,Sommet> reductionGraphe(){//Creation d'un graphe sans maison
+
+        public static int[] hungarian(int[][] cost) {
+            int n = cost.length;
+            int[] u = new int[n + 1];
+            int[] v = new int[n + 1];
+            int[] p = new int[n + 1];
+            int[] way = new int[n + 1];
+
+            for (int i = 1; i <= n; i++) {
+                p[0] = i;
+                int j0 = 0;
+                int[] minv = new int[n + 1];
+                boolean[] used = new boolean[n + 1];
+
+                for (int j = 1; j <= n; j++) {
+                    minv[j] = Integer.MAX_VALUE;
+                }
+
+                do {
+                    used[j0] = true;
+                    int i0 = p[j0];
+                    int delta = Integer.MAX_VALUE;
+                    int j1 = 0;
+
+                    for (int j = 1; j <= n; j++) {
+                        if (!used[j]) {
+                            int cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+                            if (cur < minv[j]) {
+                                minv[j] = cur;
+                                way[j] = j0;
+                            }
+                            if (minv[j] < delta) {
+                                delta = minv[j];
+                                j1 = j;
+                            }
+                        }
+                    }
+
+                    for (int j = 0; j <= n; j++) {
+                        if (used[j]) {
+                            u[p[j]] += delta;
+                            v[j] -= delta;
+                        } else {
+                            minv[j] -= delta;
+                        }
+                    }
+
+                    j0 = j1;
+
+                } while (p[j0] != 0);
+
+                do {
+                    int j1 = way[j0];
+                    p[j0] = p[j1];
+                    j0 = j1;
+                } while (j0 != 0);
+            }
+
+            // p[j] = i => i is assigned to j
+            int[] assignment = new int[n];
+            for (int j = 1; j <= n; j++) {
+                if (p[j] > 0) {
+                    assignment[p[j] - 1] = j - 1;
+                }
+            }
+            return assignment;
+        }
+
+
+    private Graphe reductionGraphe(){//Creation d'un graphe sans maison
         HashMap<String, Sommet> grapheCarrefour=new HashMap<>();
+
         for(Sommet sommet : sommets.values()){
             if(sommet.getType()==1 || sommet.getType()==0 )grapheCarrefour.put(sommet.getId(),new Sommet(sommet.getId(),sommet.getType()));
         }
@@ -402,23 +480,170 @@ public class Graphe {
         for(Sommet s:sommets.values()){
             if(s.getType()==1 || s.getType()==0 ) dijkstraMaisons(s.getId(),grapheCarrefour);
         }
-
-        return grapheCarrefour;
+        Graphe gc=new Graphe(grapheCarrefour);
+        return gc;
     }
 
     private void CPP(){
+        HashMap<String,Sommet> sommetsN=new HashMap<>();
+        HashMap<String,Sommet> sommetsP=new HashMap<>();
+        for(Sommet sommet : sommets.values()){
+            if(sommet.getDiffDegre()<0) sommetsN.put(sommet.getId(),sommet);
+            if(sommet.getDiffDegre()>0) sommetsP.put(sommet.getId(),sommet);
+        }
+        HashMap<Sommet,HashMap<Sommet,Integer>> dist=calculerToutesDistances(sommetsN,sommetsP);
 
-    }
+        // Exemple de construction de listes avec multiplicité
+        List<Sommet> gauche = new ArrayList<>(); // sommetsN, répétés |diff|
+        List<Sommet> droite = new ArrayList<>(); // sommetsP, répétés |diff|
 
-    public void afficherItineraireTh1Pb2(String depart){
-        maisons = new HashMap<>();
-        for(Sommet sommet:sommets.values()) {
-            if(sommet.getType()==2||sommet.getType()==0){//2 pour maison et 0 pour centre de traitement
-                maisons.put(sommet.getId(), sommet);
+        for (Sommet s : sommetsN.values()) {
+            int k = -s.getDiffDegre(); // par ex. si diff = -2 -> 2 fois
+            for (int i = 0; i < k; i++) {
+                gauche.add(s);
             }
         }
-        afficherItineraireTsp(depart);
+
+        for (Sommet s : sommetsP.values()) {
+            int k = s.getDiffDegre(); // ex. si diff = +3 -> 3 fois
+            for (int i = 0; i < k; i++) {
+                droite.add(s);
+            }
+        }
+        final int INF = 1_000_000_000;
+        int n = gauche.size();
+        int[][] cost = new int[n][n];
+        for (int i = 0; i < n; i++) {
+            Sommet from = gauche.get(i);
+            HashMap<Sommet, Integer> distFrom = dist.get(from);
+
+            if (distFrom == null) {
+                // normalement impossible si le graphe réduit est fortement connexe
+                throw new IllegalStateException("Aucune distance connue depuis " + from.getId());
+            }
+
+            for (int j = 0; j < n; j++) {
+                Sommet to = droite.get(j);
+                Integer dObj = distFrom.get(to);
+
+                int d;
+                if (dObj == null || dObj == Integer.MAX_VALUE) {
+                    // pas de chemin trouvé → on met un coût énorme
+                    d = INF;
+                } else {
+                    d = dObj;
+                }
+                cost[i][j] = d;
+            }
+        }
+        int[] match = hungarian(cost);
+        for (int i = 0; i < n; i++) {
+            Sommet from = gauche.get(i);
+            Sommet to = droite.get(match[i]);
+
+            dijkstra(from.getId());
+
+            ajouterChemin(from, to); // à implémenter
+        }
+
     }
+
+    private void ajouterChemin(Sommet from, Sommet to) {
+        Sommet courant = to;
+
+        while (!courant.equals(from)) {
+            Sommet pred = sommets.get(courant.getPredecesseur());
+
+            if (pred == null) {
+                throw new IllegalStateException("Pas de chemin de " + from.getId() + " à " + to.getId());
+            }
+
+            Arc a = trouverArc(pred, courant);
+            pred.addArcSortants(a);
+            courant.addArcEntrants(a);
+            courant = pred;
+        }
+    }
+
+    private ResultatCircuit circuitEulerien(String departId) {
+        Sommet depart = sommets.get(departId);
+        if (depart == null) {
+            throw new IllegalArgumentException("Sommet de départ inconnu : " + departId);
+        }
+
+        // 1. Copie des arcs sortants dans des Deque consumables
+        Map<String, Deque<Arc>> adj = new HashMap<>();
+        for (Sommet s : sommets.values()) {
+            adj.put(s.getId(), new ArrayDeque<>(s.getArcsSortants()));
+        }
+
+        Deque<Sommet> pileSommets = new ArrayDeque<>();
+        Deque<Arc> pileArcs = new ArrayDeque<>();
+        List<Arc> circuitArcs = new ArrayList<>();
+
+        pileSommets.push(depart);
+
+        // 2. Hierholzer : on construit une liste d'arcs dans l'ordre inverse
+        while (!pileSommets.isEmpty()) {
+            Sommet v = pileSommets.peek();
+            Deque<Arc> arcsSortants = adj.get(v.getId());
+
+            if (arcsSortants != null && !arcsSortants.isEmpty()) {
+                // On prend un arc sortant encore disponible
+                Arc a = arcsSortants.pollFirst();
+                Sommet w = sommets.get(a.getArrive());
+                pileSommets.push(w);
+                pileArcs.push(a); // arc correspondant au déplacement
+            } else {
+                // Cul-de-sac : on remonte en ajoutant l'arc associé au circuit
+                pileSommets.pop();
+                if (!pileArcs.isEmpty()) {
+                    circuitArcs.add(pileArcs.pop());
+                }
+            }
+        }
+
+        // 3. On a les arcs du circuit dans l'ordre inverse → renverser
+        Collections.reverse(circuitArcs);
+
+        // 4. Construire la liste de sommets + calculer la longueur totale
+        ArrayList<Sommet> chemin = new ArrayList<>();
+        int longueurTotale = 0;
+
+        if (!circuitArcs.isEmpty()) {
+            // Premier sommet : origine du premier arc
+            Arc first = circuitArcs.get(0);
+            Sommet current = sommets.get(first.getOrigine());
+            chemin.add(current);
+
+            for (Arc a : circuitArcs) {
+                longueurTotale += a.getDistance();
+                Sommet next = sommets.get(a.getArrive());
+                chemin.add(next);
+            }
+        }
+
+        return new ResultatCircuit(chemin, longueurTotale);
+    }
+
+
+
+    public void afficherItineraireTh1Pb2(String departId) {
+        Graphe gc=reductionGraphe();
+        gc.CPP();
+        ResultatCircuit res=gc.circuitEulerien(departId);
+        System.out.println("Itinéraire du postier chinois :");
+        for (int i = 0; i < res.chemin.size(); i++) {
+            Sommet s = res.chemin.get(i);
+            System.out.print(s.getId());
+            if (i < res.chemin.size() - 1) {
+                System.out.println(" -> ");
+            }
+        }
+        System.out.println("\nLongueur totale = " + res.longueur);
+    }
+
+
 
 
     /////////////////////////THEME2//////////////////////////////

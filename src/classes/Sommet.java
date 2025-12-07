@@ -44,6 +44,7 @@ public class Sommet implements Comparable<Sommet>{
     public void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
     public ArrayList<Arc> getArcsSortants(){return arcsSortants;}
     public ArrayList<Arc> addArcEntrants(Arc arc){arcsEntrants.add(arc);return arcsEntrants;}
+    public ArrayList<Arc> getArcsEntrants(){return arcsEntrants;}
 
     //fonction id
     public String getId(){return id;}

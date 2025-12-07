@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Interface {
 
-    private final Graphe g = new Graphe();
+    private final Graphe g = new Graphe("graphe.txt");
     private final Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
