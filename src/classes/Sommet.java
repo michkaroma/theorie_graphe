@@ -6,7 +6,7 @@ import java.util.*;
 public class Sommet implements Comparable<Sommet>{
     //variables
     String id;
-    ArrayList<Arc> arcsSortants =new ArrayList<>();
+    private ArrayList<Arc> arcsSortants =new ArrayList<>();
 
     //variables algo djikstra
     boolean verif;
@@ -35,7 +35,7 @@ public class Sommet implements Comparable<Sommet>{
     public ArrayList<Arc> addArcSortants(Arc arc){arcsSortants.add(arc);return arcsSortants;}
     public void setArcsSortants(ArrayList<Arc> arcsSortants){this.arcsSortants = arcsSortants;}
     public ArrayList<Arc> getArcsSortants(){return arcsSortants;}
-    public ArrayList<Arc> addArcEntrants(Arc arc){arcsEntrants.add(arc);return arcsSortants;}
+    public ArrayList<Arc> addArcEntrants(Arc arc){arcsEntrants.add(arc);return arcsEntrants;}
 
     //fonction id
     public String getId(){return id;}
