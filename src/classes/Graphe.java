@@ -120,60 +120,41 @@ public class Graphe {
     public void afficherItineraireTh1Pb1Hp1(String depart, String arrive) {
         int longueurTot=0;
         dijkstra(depart);
-
         Sommet dest = sommets.get(arrive);
-
         if (dest == null) {
             System.out.println("Sommet d'arrivee inconnu : " + arrive);
             return;
         }
-
-
         // Reconstruction du chemin en remontant les prédécesseurs
-
-
         List<String> cheminAlle=new ArrayList<>();
         Sommet courant = dest;
-
         while (courant != null) {
             cheminAlle.add(courant.id);
             if (courant.predecesseur == null) break;
             courant = sommets.get(courant.predecesseur);
         }
-
         // Le chemin est à l'envers, on le remet dans le bon sens
         Collections.reverse(cheminAlle);
-
         longueurTot +=dest.longueur;
-
-
         dijkstra(arrive);
-
         Sommet dep = sommets.get(depart);
-
         if (dep == null) {
             System.out.println("Sommet de depart inconnu : " + depart);
             return;
         }
-
         List<String> cheminRetour=new ArrayList<>();
         courant = dep;
-
         while (courant != null) {
             cheminRetour.add(courant.id);
             if (courant.predecesseur == null) break;
             courant = sommets.get(courant.predecesseur);
         }
-
         // Le chemin est à l'envers, on le remet dans le bon sens
         Collections.reverse(cheminRetour);
-
         longueurTot +=dep.longueur;
-
         //supperposition des deux chemins
         List<String> chemin = new ArrayList<>(cheminAlle);
         for(int i=1;i<cheminRetour.size();i++)chemin.add(cheminRetour.get(i));
-
         // Affichage
         System.out.print("Itineraire de " + depart + " à " + arrive + " : ");
         for (int i = 0; i < chemin.size(); i++) {
@@ -351,6 +332,7 @@ public class Graphe {
         do {
             System.out.print("entrez le nombre (positif et inferieur à 10) de particulier :");
             nbMaisons=sc.nextInt();
+            sc.nextLine();
             if(nbMaisons>10 ||nbMaisons<0) System.out.println("il faut que le nombre soit >0 et <10");
         }while(nbMaisons>10 || nbMaisons<0);
         for(int i=0;i<nbMaisons;i++) {
