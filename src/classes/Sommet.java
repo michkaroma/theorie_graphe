@@ -6,7 +6,8 @@ import java.util.*;
 public class Sommet implements Comparable<Sommet>{
     //variables
     String id;
-    private ArrayList<Arc> arcsSortants =new ArrayList<>();
+    ArrayList<Arc> arcsSortants;
+    private int type; //0->centre de collecte  1->carrefour  2->maisons  3->points de collectes
 
     //variables algo djikstra
     boolean verif;
@@ -19,8 +20,9 @@ public class Sommet implements Comparable<Sommet>{
 
 
     //constructeur
-    public Sommet(String id){
+    public Sommet(String id,int type){
         this.id = id;
+        this.type=type;
         arcsSortants = new ArrayList<>();
         arcsEntrants = new ArrayList<>();
     }
@@ -48,4 +50,7 @@ public class Sommet implements Comparable<Sommet>{
     //fonction predecesseur
     public String getPredecesseur(){return predecesseur;}
     public void setPredecesseur(String p){predecesseur = p;}
+
+    //fonction type
+    public int getType(){return type;}
 }

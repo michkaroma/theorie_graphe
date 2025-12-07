@@ -6,11 +6,13 @@ import java.util.*;
 
 public class Graphe {
     private HashMap<String, Sommet> sommets;
+    private HashMap<String, Sommet> maisons;
     private int capaciteCamion = 15;
 
     //constructeur
     public Graphe() {
         sommets = new HashMap<>();
+        recupFichier("grapheCapacite.txt");
     }
 
     // Récupère les informations du graphe.txt
@@ -21,31 +23,32 @@ public class Graphe {
             while (sc.hasNextLine()) {
                 String s = sc.nextLine();
                 String[] parts = s.split(";");
-                Arc arc = new Arc(parts[0].trim(), parts[1].trim(), Integer.valueOf(parts[2].trim()));
-                if (!sommets.containsKey(parts[0].trim())) sommets.put(parts[0].trim(), new Sommet(parts[0].trim()));
-                if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1].trim(), new Sommet(parts[1].trim()));
-                sommets.get(parts[0].trim()).addArcSortants(arc);
-                sommets.get(parts[1].trim()).addArcEntrants(arc);
-            }
-            sc.close();
-        } catch (FileNotFoundException e) {
-            System.err.println(e);
-        }
-    }
-
-    // Récupère les informations du grapheCapacite.txt
-    public void recupFichierCapacite(String adresse) {
-        try {
-            File fichier = new File(adresse);
-            Scanner sc = new Scanner(fichier);
-            while (sc.hasNextLine()) {
-                String s = sc.nextLine();
-                String[] parts = s.split(";");
                 Arc arc = new Arc(parts[0].trim(), parts[1].trim(), Integer.valueOf(parts[2].trim()), Integer.valueOf(parts[3].trim()));
-                if (!sommets.containsKey(parts[0].trim())) sommets.put(parts[0].trim(), new Sommet(parts[0].trim()));
-                if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1].trim(), new Sommet(parts[1].trim()));
+
+                if (!sommets.containsKey(parts[0].trim())) {
+                    int type=0;
+                    switch(parts[0].trim().charAt(0)){
+                        case 'c':
+                            type=0;
+                            break;
+                        case 'C':
+                            type=1;
+                            break;
+                        case 'M':
+                            type=2;
+                            break;
+                        case 'P':
+                            type=3;
+                            break;
+                        default:
+                            System.out.println("ce sommet ne rentre pas dans les crieres de type (switch case):" + parts[0]);
+                            break;
+                    }
+                    sommets.put(parts[0].trim(), new Sommet(parts[0].trim(), type));
+                }
+                //if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1].trim(), new Sommet(parts[1].trim()),);
                 sommets.get(parts[0].trim()).addArcSortants(arc);
-                sommets.get(parts[1].trim()).addArcEntrants(arc);
+                //sommets.get(parts[1].trim()).addArcEntrants(arc);
             }
             sc.close();
         } catch (FileNotFoundException e) {
@@ -53,7 +56,8 @@ public class Graphe {
         }
     }
 
-
+    //////////////////////////// THEME 1////////////////////////
+    /// Hypothèse 3
     public void dijkstra(String depart) {
         PriorityQueue<Sommet> liste = new PriorityQueue<>();
         for (Sommet sommet : sommets.values()) {
@@ -79,44 +83,63 @@ public class Graphe {
         }
     }
 
-
-    public void cul_de_sac(Sommet sommet){
-
-    }
-
-    public void afficherItineraireDijkstra(String depart, String arrive) {
-        // On lance Dijkstra à partir du sommet de départ
+    /// Problématique 1 Hypothèse 1
+    public void afficherItineraireTh1Pb1Hp1(String depart, String arrive) {
+        int longueurTot=0;
         dijkstra(depart);
 
         Sommet dest = sommets.get(arrive);
+
         if (dest == null) {
             System.out.println("Sommet d'arrivée inconnu : " + arrive);
             return;
         }
 
-        if (dest.longueur == Integer.MAX_VALUE) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
-            return;
-        }
 
         // Reconstruction du chemin en remontant les prédécesseurs
-        List<String> chemin = new ArrayList<>();
+
+
+        List<String> cheminAlle=new ArrayList<>();
         Sommet courant = dest;
 
         while (courant != null) {
-            chemin.add(courant.id);
+            cheminAlle.add(courant.id);
             if (courant.predecesseur == null) break;
             courant = sommets.get(courant.predecesseur);
         }
 
-        // Si on n'est jamais passé par le depart, problème
-        if (!chemin.get(chemin.size() - 1).equals(depart)) {
-            System.out.println("Aucun chemin de " + depart + " à " + arrive);
+        // Le chemin est à l'envers, on le remet dans le bon sens
+        Collections.reverse(cheminAlle);
+
+        longueurTot +=dest.longueur;
+
+
+        dijkstra(arrive);
+
+        Sommet dep = sommets.get(depart);
+
+        if (dep == null) {
+            System.out.println("Sommet de depart inconnu : " + depart);
             return;
         }
 
+        List<String> cheminRetour=new ArrayList<>();
+        courant = dep;
+
+        while (courant != null) {
+            cheminRetour.add(courant.id);
+            if (courant.predecesseur == null) break;
+            courant = sommets.get(courant.predecesseur);
+        }
+
         // Le chemin est à l'envers, on le remet dans le bon sens
-        Collections.reverse(chemin);
+        Collections.reverse(cheminRetour);
+
+        longueurTot +=dep.longueur;
+
+        //supperposition des deux chemins
+        List<String> chemin = new ArrayList<>(cheminAlle);
+        for(int i=1;i<cheminRetour.size();i++)chemin.add(cheminRetour.get(i));
 
         // Affichage
         System.out.print("Itinéraire de " + depart + " à " + arrive + " : ");
@@ -125,14 +148,206 @@ public class Graphe {
             if (i < chemin.size() - 1) System.out.print(" -> ");
         }
         System.out.println();
-        System.out.println("Longueur totale = " + dest.longueur);
+        System.out.println("Longueur totale = " + longueurTot );
+    }
+
+    /// Problématique 1 Hypothèse 2 & Problématique 2
+    //calcul des distances pour aller de n'importe quelle point s à n'importe quelle autre point t (grâce à djikstra)
+    public HashMap<Sommet,HashMap<Sommet,Integer>> calculerToutesDistances(){
+
+        HashMap<Sommet,HashMap<Sommet,Integer>> dist=new HashMap<>();
+
+        for(Sommet s: maisons.values()){
+            dijkstra(s.getId());
+
+            HashMap<Sommet,Integer> distDepuisS=new HashMap<>();
+            for(Sommet t: maisons.values()) {
+                distDepuisS.put(t, t.getLongueur());
+            }
+
+            dist.put(s,distDepuisS);
+
+        }
+
+        return dist;
+    }
+
+    //sous classe pour plus de practicité dans le stockage des résultats
+    public class ResultatCircuit {
+        ArrayList<Sommet> chemin;
+        int longueur;
+        ResultatCircuit(ArrayList<Sommet> meilleurChemin,int meilleurCout){
+            chemin=meilleurChemin;
+            longueur=meilleurCout;
+        }
+    }
+    private int meilleurCout;
+    private ArrayList<Sommet> meilleurChemin;
+
+    private void tspRec(Sommet courant,Sommet depart,HashSet<Sommet> nonVisites,
+                        int coutActuel,ArrayList<Sommet> cheminCourant,HashMap<Sommet,
+                    HashMap<Sommet,Integer>> dist,HashMap<Sommet,Integer> minSortant){
+        int borne = coutActuel;
+        for(Sommet s: nonVisites){
+            borne+=minSortant.get(s);
+        }
+        if(borne>=meilleurCout){
+            return;
+        }
+
+        if(nonVisites.isEmpty()){
+            int coutRetour=dist.get(courant).get(depart);
+            int coutTotal=coutActuel+coutRetour;
+            if(coutTotal<meilleurCout){
+                meilleurCout=coutTotal;
+                meilleurChemin=new ArrayList<>(cheminCourant);
+                meilleurChemin.add(depart);
+            }
+            return;
+        }
+        ArrayList<Sommet> candidats = new ArrayList<>(nonVisites);
+
+        for(Sommet suivant :candidats){
+            int d=dist.get(courant).get(suivant);
+            int nouveauCout=coutActuel+d;
+            if(nouveauCout >=meilleurCout) continue;
+            nonVisites.remove(suivant);
+            cheminCourant.add(suivant);
+
+            tspRec(suivant,depart,nonVisites,nouveauCout,cheminCourant,dist,minSortant);
+
+            cheminCourant.remove(cheminCourant.size()-1);
+            nonVisites.add(suivant);
+        }
+    }
+
+    public ResultatCircuit tspBranchAndBound(String departId){
+        Sommet depart=maisons.get(departId);
+        if(depart==null) throw new IllegalArgumentException("Sommet de départ inconnu :"+departId);
+
+        HashMap<Sommet,HashMap<Sommet,Integer>>dist=calculerToutesDistances();
+
+        HashMap<Sommet,Integer> minSortant=new HashMap<>();
+        for(Sommet s: maisons.values()){
+            int min=Integer.MAX_VALUE;
+            for(Sommet t: maisons.values()){
+                int d=dist.get(s).get(t);
+                if(d<min)min=d;
+            }
+            minSortant.put(s,min);
+        }
+
+        meilleurCout=Integer.MAX_VALUE;
+        meilleurChemin=null;
+
+        HashSet<Sommet> nonVisites=new HashSet<>(maisons.values());
+        nonVisites.remove(depart);
+
+        ArrayList<Sommet> cheminCourant=new ArrayList<>();
+        cheminCourant.add(depart);
+
+        tspRec(depart,depart,nonVisites,0,cheminCourant,dist,minSortant);
+
+        if(meilleurChemin==null)return null;
+        return new ResultatCircuit(meilleurChemin,meilleurCout);
+
+    }
+
+    private ArrayList<Sommet> cheminDijkstraSommet(String departId, String arriveId) {
+        dijkstra(departId);
+
+        Sommet dest = sommets.get(arriveId);
+        if (dest == null || dest.longueur == Integer.MAX_VALUE) {
+            return null; // pas de chemin
+        }
+
+        // Reconstruction du chemin en remontant les prédécesseurs
+        ArrayList<Sommet> chemin = new ArrayList<>();
+        Sommet courant = dest;
+
+        while (courant != null) {
+            chemin.add(courant);
+            if (courant.predecesseur == null) break;
+            courant = sommets.get(courant.predecesseur);
+        }
+
+        // Le chemin est à l'envers, on le remet dans le bon sens
+        Collections.reverse(chemin);
+        return chemin;
+    }
+
+    public void afficherItineraireTsp(String depart) {
+
+        ResultatCircuit res = tspBranchAndBound(depart);
+
+        if (res == null) {
+            System.out.println("Aucune tournée TSP trouvée à partir de " + depart + ".");
+            return;
+        }
+
+        ArrayList<Sommet> tour=res.chemin;
+
+        List<Sommet> cheminComplet=new ArrayList<>();
+        for(int i=0;i<tour.size()-1;i++){
+            Sommet from=tour.get(i);
+            Sommet to=tour.get(i+1);
+
+            ArrayList<Sommet> segment = cheminDijkstraSommet(from.getId(),to.getId());
+            if(i==0)for(int j=0;j<segment.size();j++)cheminComplet.add(segment.get(j));
+            else for(int j=1;j<segment.size();j++)cheminComplet.add(segment.get(j));
+        }
+
+        // Affichage du chemin
+        System.out.print("Itinéraire TSP à partir de " + depart + " : ");
+
+        for (int i = 0; i < cheminComplet.size(); i++) {
+            System.out.println(cheminComplet.get(i).getId());
+            if (i < cheminComplet.size() - 1) System.out.print(" -> ");
+        }
+        System.out.println();
+
+        // Affichage de la longueur totale
+        System.out.println("Longueur totale de la tournée = " + res.longueur);
+    }
+
+    public void afficherItineraireTh1Pb1Hp2(String depart){
+        maisons = new HashMap<>();
+        maisons.put("centre_de_traitement",sommets.get("centre_de_traitement"));
+        Scanner sc=new Scanner(System.in);
+        int nbMaisons;
+        do {
+            System.out.print("entrez le nombre (positif et inférieur à 10) de particulier :");
+            nbMaisons=sc.nextInt();
+            if(nbMaisons>10 ||nbMaisons<0) System.out.println("il faut que le nombre soit >0 et <10");
+        }while(nbMaisons>10 || nbMaisons<0);
+        for(int i=0;i<nbMaisons;i++) {
+            System.out.print("entrez l'id d'un lieu :");
+            String buffer = new String();
+            buffer = sc.nextLine();
+            if (!sommets.containsKey(buffer)) {
+                System.out.println("adresse inconnu, recommencez");
+                i--;
+            } else maisons.put(buffer, sommets.get(buffer));
+        }
+        sc.close();
+        afficherItineraireTsp(depart);
+    }
+
+    public void afficherItineraireTh1Pb2(String depart){
+        maisons = new HashMap<>();
+        for(Sommet sommet:sommets.values()) {
+            if(sommet.getType()==2||sommet.getType()==0){//2 pour maison et 0 pour centre de traitement
+                maisons.put(sommet.getId(), sommet);
+            }
+        }
+        afficherItineraireTsp(depart);
     }
 
 
-
+    /////////////////////////THEME2//////////////////////////////
 
     // THEME 2 : APPROCHE 1 (Plus petit voisins proches)
-    public List<Sommet> tourneePPV(String depart) {
+        public List<Sommet> tourneePPV(String depart) {
 
         Sommet courant = sommets.get(depart);  // On récupère le sommet de depart
 
