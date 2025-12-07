@@ -14,6 +14,10 @@ public class Graphe {
 
     }
 
+    private void actualisationDiffDegre(){
+        for (Sommet sommet : sommets.values()) {sommet.setDiffDegre(sommet.getDegreP()-sommet.getDegreN());}
+    }
+
     public void recupFichier(String adresse) {
         try {
             File fichier = new File(adresse);
@@ -44,11 +48,34 @@ public class Graphe {
                     }
                     sommets.put(parts[0].trim(), new Sommet(parts[0].trim(), type));
                 }
-                //if (!sommets.containsKey(parts[1].trim())) sommets.put(parts[1].trim(), new Sommet(parts[1].trim()),);
+                if (!sommets.containsKey(parts[1].trim())) {
+                    int type=0;
+                    switch(parts[1].trim().charAt(0)){
+                        case 'c':
+                            type=0;
+                            break;
+                        case 'C':
+                            type=1;
+                            break;
+                        case 'M':
+                            type=2;
+                            break;
+                        case 'P':
+                            type=3;
+                            break;
+                        default:
+                            System.out.println("ce sommet ne rentre pas dans les crieres de type (switch case):" + parts[1]);
+                            break;
+                    }
+                    sommets.put(parts[1].trim(), new Sommet(parts[1].trim(),type ));
+                }
                 sommets.get(parts[0].trim()).addArcSortants(arc);
-                //sommets.get(parts[1].trim()).addArcEntrants(arc);
+                sommets.get(parts[0].trim()).addDegreP();
+                sommets.get(parts[1].trim()).addArcEntrants(arc);
+                sommets.get(parts[1].trim()).addDegreN();
             }
             sc.close();
+            actualisationDiffDegre();
         } catch (FileNotFoundException e) {
             System.err.println(e);
         }
@@ -149,17 +176,17 @@ public class Graphe {
         System.out.println("Longueur totale = " + longueurTot );
     }
 
-    /// Problématique 1 Hypothèse 2 & Problématique 2
+    /// Problématique 1 Hypothèse 2
     //calcul des distances pour aller de n'importe quelle point s à n'importe quelle autre point t (grâce à djikstra)
-    public HashMap<Sommet,HashMap<Sommet,Integer>> calculerToutesDistances(){
+    public HashMap<Sommet,HashMap<Sommet,Integer>> calculerToutesDistances(HashMap<String,Sommet> departs,HashMap<String,Sommet> arrives){
 
         HashMap<Sommet,HashMap<Sommet,Integer>> dist=new HashMap<>();
 
-        for(Sommet s: maisons.values()){
+        for(Sommet s: departs.values()){
             dijkstra(s.getId());
 
             HashMap<Sommet,Integer> distDepuisS=new HashMap<>();
-            for(Sommet t: maisons.values()) {
+            for(Sommet t: arrives.values()) {
                 distDepuisS.put(t, t.getLongueur());
             }
 
@@ -223,7 +250,7 @@ public class Graphe {
         Sommet depart=maisons.get(departId);
         if(depart==null) throw new IllegalArgumentException("Sommet de départ inconnu :"+departId);
 
-        HashMap<Sommet,HashMap<Sommet,Integer>>dist=calculerToutesDistances();
+        HashMap<Sommet,HashMap<Sommet,Integer>>dist=calculerToutesDistances(maisons,maisons);
 
         HashMap<Sommet,Integer> minSortant=new HashMap<>();
         for(Sommet s: maisons.values()){
@@ -274,7 +301,7 @@ public class Graphe {
         return chemin;
     }
 
-    public void afficherItineraireTsp(String depart) {
+    private void afficherItineraireTsp(String depart) {
 
         ResultatCircuit res = tspBranchAndBound(depart);
 
@@ -329,6 +356,57 @@ public class Graphe {
         }
         sc.close();
         afficherItineraireTsp(depart);
+    }
+
+    /// Problématique 2
+
+    private void dijkstraMaisons(String departId,HashMap<String,Sommet> graphe){
+        PriorityQueue<Sommet> liste=new PriorityQueue<>();
+        for(Sommet sommet : sommets.values()){
+            sommet.verif=false;
+            sommet.longueur=Integer.MAX_VALUE;
+            sommet.predecesseur=null;
+        }
+        Sommet depart = sommets.get(departId);
+        depart.longueur=0;
+        liste.add(depart);
+        while(!liste.isEmpty()){
+            Sommet courant=liste.poll();
+            if(courant.verif) continue;
+            courant.verif=true;
+            if((courant.getType()==1 || courant.getType()==0 ) && courant!=depart)continue;
+            for(Arc arc:courant.getArcsSortants()){
+                Sommet voisin = sommets.get(arc.getArrive());
+                int nouvelleLongueur=courant.getLongueur()+arc.getDistance();
+                if(nouvelleLongueur<voisin.getLongueur()){
+                    voisin.setLongueur(nouvelleLongueur);
+                    voisin.setPredecesseur(courant.getId());
+                    liste.add(voisin);
+                }
+            }
+        }
+        for(Sommet cible: sommets.values()){
+            if(!(cible.getType()==1 || cible.getType()==0 ) || cible==depart || cible.getLongueur()==Integer.MAX_VALUE) continue;
+            graphe.get(depart).addArcSortants(new Arc(departId,cible.getId(),cible.getLongueur()));
+            graphe.get(depart).addArcEntrants(new Arc(cible.getId(),departId,cible.getLongueur()));
+        }
+    }
+
+    private HashMap<String,Sommet> reductionGraphe(){//Creation d'un graphe sans maison
+        HashMap<String, Sommet> grapheCarrefour=new HashMap<>();
+        for(Sommet sommet : sommets.values()){
+            if(sommet.getType()==1 || sommet.getType()==0 )grapheCarrefour.put(sommet.getId(),new Sommet(sommet.getId(),sommet.getType()));
+        }
+
+        for(Sommet s:sommets.values()){
+            if(s.getType()==1 || s.getType()==0 ) dijkstraMaisons(s.getId(),grapheCarrefour);
+        }
+
+        return grapheCarrefour;
+    }
+
+    private void CPP(){
+
     }
 
     public void afficherItineraireTh1Pb2(String depart){

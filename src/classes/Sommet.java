@@ -6,8 +6,12 @@ import java.util.*;
 public class Sommet implements Comparable<Sommet>{
     //variables
     String id;
-    ArrayList<Arc> arcsSortants =new ArrayList<>();
+    ArrayList<Arc> arcsSortants;
+    ArrayList<Arc> arcsEntrants;
     private int type; //0->centre de collecte  1->carrefour  2->maisons  3->points de collectes
+    private int degreP;
+    private int degreN;
+    private int diffDegre;
 
     //variables algo djikstra
     boolean verif;
@@ -16,7 +20,6 @@ public class Sommet implements Comparable<Sommet>{
 
     //variable cul de sac
     boolean cul_de_sac;
-    ArrayList<Arc> arcsEntrants;
 
 
     //constructeur
@@ -25,6 +28,9 @@ public class Sommet implements Comparable<Sommet>{
         this.type=type;
         arcsSortants = new ArrayList<>();
         arcsEntrants = new ArrayList<>();
+        degreP=0;
+        degreN=0;
+        diffDegre=0;
     }
 
     //fonctions de Comparable
@@ -53,4 +59,14 @@ public class Sommet implements Comparable<Sommet>{
 
     //fonction type
     public int getType(){return type;}
+
+    //fonction degre
+    public int getDegreN(){return degreN;}
+    public int getDegreP(){return degreP;}
+    public int getDiffDegre(){return diffDegre;}
+    public void setDiffDegre(int diffDegre){this.diffDegre = diffDegre;}
+    public void setDegreP(int degreP){this.degreP = degreP;}
+    public void setDegreN(int degreN){this.degreN = degreN;}
+    public void addDegreP(){this.degreP += 1;}
+    public void addDegreN(){this.degreN += 1;}
 }
