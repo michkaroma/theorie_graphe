@@ -135,25 +135,20 @@ public class Interface {
     }
 
     private void runT1Pb1H1() {
-        System.out.print("Départ: "); String dep = sc.nextLine().trim();
         System.out.print("Arrivée: "); String arr = sc.nextLine().trim();
-        if (dep.isEmpty() || arr.isEmpty()) { System.out.println("Champs requis."); return; }
+        if (arr.isEmpty()) { System.out.println("Champs requis."); return; }
         System.out.println("[Exécution] Th1/Pb1/H1");
-        g.afficherItineraireTh1Pb1Hp1(dep, arr);
+        g.afficherItineraireTh1Pb1Hp1("centre_de_traitement", arr);
     }
 
     private void runT1Pb1H2() {
-        System.out.print("Départ: "); String dep = sc.nextLine().trim();
-        if (dep.isEmpty()) { System.out.println("Départ requis."); return; }
         System.out.println("Vous allez être guidé par la console interne de Graphe (nombre d'adresses puis leurs IDs).");
-        g.afficherItineraireTh1Pb1Hp2(dep); // cette méthode gère la saisie console elle-même
+        g.afficherItineraireTh1Pb1Hp2("centre_de_traitement");
     }
 
     private void runT1Pb2() {
-        System.out.print("Départ: "); String dep = sc.nextLine().trim();
-        if (dep.isEmpty()) { System.out.println("Départ requis."); return; }
         System.out.println("[Exécution] Th1/Pb2");
-        g.afficherItineraireTh1Pb2(dep);
+        g.afficherItineraireTh1Pb2("centre_de_traitement");
     }
 
     private void runPPV() {
